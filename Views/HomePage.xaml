@@ -1,0 +1,50 @@
+<Page x:Class="WinZ.Views.HomePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="#1A1A1A" Title="Home">
+
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="400">
+            <!-- Header -->
+            <StackPanel Margin="0,0,0,40">
+                <TextBlock Text="WinZ" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                <TextBlock Text="Personalize your Windows installation" FontSize="11" Foreground="#AAAAAA" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- Action Area -->
+            <StackPanel>
+                <Button x:Name="ExpressBtn" Click="Express_Click" Style="{StaticResource CardBtn}" Height="80">
+                    <Grid Margin="15,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="⚡" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                            <TextBlock Text="Express Setup" FontWeight="Bold" FontSize="14"/>
+                            <TextBlock Text="Ready-to-go configuration with essential apps and tweaks." FontSize="11" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </Button>
+
+                <Button x:Name="AdvancedBtn" Click="Advanced_Click" Style="{StaticResource CardBtn}" Height="80" Margin="0,10,0,0">
+                    <Grid Margin="15,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="⚙" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#0078D4"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                            <TextBlock Text="Advanced Setup" FontWeight="Bold" FontSize="14"/>
+                            <TextBlock Text="Choose individual software, tweaks, and debloating options." FontSize="11" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </Button>
+            </StackPanel>
+
+            <!-- Info -->
+            <TextBlock Text="Administrator privileges are required for system changes."
+                       FontSize="10" Foreground="#666666" HorizontalAlignment="Center" Margin="0,40,0,0"/>
+        </StackPanel>
+    </Grid>
+</Page>

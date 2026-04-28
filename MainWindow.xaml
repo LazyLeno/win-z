@@ -1,0 +1,12 @@
+<Window x:Class="WinZ.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WinZ"
+        Height="580" Width="780"
+        MinHeight="480" MinWidth="640"
+        WindowStyle="SingleBorderWindow"
+        Background="#1E1E1E"
+        FontFamily="Segoe UI" FontSize="13">
+
+    <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden"/>
+</Window>

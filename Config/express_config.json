@@ -1,0 +1,116 @@
+{
+    "InstallTasks": [
+        {
+            "Name": "LibreWolf",
+            "Type": "Install",
+            "Method": "Winget",
+            "PackageId": "LibreWolf.LibreWolf",
+            "Category": "Software",
+            "SubCategory": "Web Browsers",
+            "IconUrl": "https://librewolf.net/img/librewolf.png",
+            "Description": "Privacy-focused Firefox fork with enhanced security defaults."
+        },
+        {
+            "Name": "Brave",
+            "Type": "Install",
+            "Method": "Winget",
+            "PackageId": "Brave.Brave",
+            "Category": "Software",
+            "SubCategory": "Web Browsers",
+            "IconUrl": "https://brave.com/static-assets/images/brave-logo-sans-text.png",
+            "Description": "Fast browser with built-in ad blocking and privacy features."
+        },
+        {
+            "Name": "Internet Download Manager",
+            "Type": "Install",
+            "Method": "Winget",
+            "PackageId": "Tonec.InternetDownloadManager",
+            "Category": "Software",
+            "SubCategory": "Download Managers",
+            "IconUrl": "https://www.internetdownloadmanager.com/images/idm_logo.png",
+            "Description": "High-speed download accelerator with browser integration."
+        },
+        {
+            "Name": "Proton VPN",
+            "Type": "Install",
+            "Method": "Winget",
+            "PackageId": "ProtonVPN.ProtonVPN",
+            "Category": "Software",
+            "SubCategory": "Security & VPN",
+            "IconUrl": "https://protonvpn.com/static-assets/images/logos/protonvpn-logo.png",
+            "Description": "Secure, no-logs VPN from the makers of ProtonMail."
+        },
+        {
+            "Name": "Discord",
+            "Type": "Install",
+            "Method": "Winget",
+            "PackageId": "Discord.Discord",
+            "Category": "Software",
+            "SubCategory": "Communication",
+            "IconUrl": "https://assets-global.website-files.com/6257adef93467e06af680538/62575454c5a7d576a8d8e132_Discord-Logo-Color.png",
+            "Description": "Voice, video and text communication for communities."
+        },
+        {
+            "Name": "YouTube Music",
+            "Type": "Install",
+            "Method": "DirectDownload",
+            "PackageId": "th-ch/youtube-music",
+            "FallbackUrl": "https://github.com/th-ch/youtube-music/releases/latest/download/YouTube-Music-Setup.exe",
+            "Category": "Software",
+            "SubCategory": "Music",
+            "IconUrl": "https://raw.githubusercontent.com/th-ch/youtube-music/master/assets/generated/icons/png/512x512.png",
+            "Description": "Feature-rich YouTube Music desktop client (open source)."
+        },
+        {
+            "Name": "OneCommander",
+            "Type": "Install",
+            "Method": "Winget",
+            "PackageId": "OneCommander",
+            "Category": "Software",
+            "SubCategory": "File Managers",
+            "IconUrl": "https://www.onecommander.com/oclogo.png",
+            "Description": "Modern dual-pane file manager with tabs and column view."
+        },
+        {
+            "Name": "Directory Opus",
+            "Type": "Install",
+            "Method": "Winget",
+            "PackageId": "GPSoftware.DirectoryOpus",
+            "Category": "Software",
+            "SubCategory": "File Managers",
+            "IconUrl": "https://www.gpsoft.com.au/img/Opus12Logo.png",
+            "Description": "Professional file manager and Windows Explorer replacement."
+        }
+    ],
+    "TweakTasks": [
+        {
+            "Name": "Verbose Login Messages",
+            "Type": "Tweak",
+            "TweakScript": "reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v verbosestatus /t REG_DWORD /d 1 /f",
+            "Category": "Windows",
+            "SubCategory": "System Tweaks",
+            "Icon": "📋",
+            "Description": "Show detailed status messages during login and shutdown."
+        },
+        {
+            "Name": "Disable Cortana",
+            "Type": "Tweak",
+            "TweakScript": "reg add HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search /v AllowCortana /t REG_DWORD /d 0 /f",
+            "Category": "Windows",
+            "SubCategory": "Privacy",
+            "Icon": "🔇",
+            "Description": "Disables Cortana search integration system-wide."
+        }
+    ],
+    "RemoveTasks": [
+        {
+            "Name": "Xbox Gaming Overlay",
+            "Type": "Remove",
+            "PackageId": "Microsoft.XboxGamingOverlay",
+            "Category": "Windows",
+            "SubCategory": "Debloat",
+            "Icon": "🎮",
+            "Description": "Removes the Xbox Game Bar overlay application."
+        }
+    ]
+}
