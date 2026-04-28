@@ -2,7 +2,9 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:vm="clr-namespace:WinZ.ViewModels"
-      Background="#1A1A1A" Title="Advanced Setup">
+      Background="#1A1A1A" Title="Advanced Setup"
+      KeepAlive="False" Unloaded="Page_Unloaded">
+
 
     <Page.Resources>
         <!-- Reusable Group Template -->
@@ -136,6 +138,9 @@
                 <ItemsControl Grid.Column="4" ItemsSource="{Binding Column3}" ItemTemplate="{StaticResource TaskGroupTemplate}"/>
             </Grid>
         </ScrollViewer>
+
+
+
 
         <!-- Footer -->
         <Border Grid.Row="2" Background="#212121" BorderBrush="#2D2D2D" BorderThickness="0,1,0,0">

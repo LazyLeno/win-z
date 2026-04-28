@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -10,47 +9,90 @@ namespace WinZ.Services;
 
 public static class AsyncImageLoader
 {
-    private static readonly ConcurrentDictionary<string, BitmapImage> _cache = new();
-    private static readonly HttpClient _httpClient = new();
-
-    static AsyncImageLoader()
-    {
-        _httpClient.DefaultRequestHeaders.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-    }
+    private static readonly ConcurrentDictionary<string, WeakReference<BitmapImage>> _weakCache = new();
+    private static readonly ConcurrentQueue<BitmapImage> _strongCache = new();
+    private static readonly ConcurrentDictionary<string, BitmapImage> _downloading = new();
+    private static readonly System.Threading.SemaphoreSlim _downloadSemaphore = new(3);
+    private const int MaxStrongCache = 32;
 
     public static BitmapImage? GetImage(string url, Action<BitmapImage> onLoaded)
     {
         if (string.IsNullOrEmpty(url)) return null;
 
-        if (_cache.TryGetValue(url, out var existing))
+        if (_weakCache.TryGetValue(url, out var weak) && weak.TryGetTarget(out var existing))
             return existing;
 
-        // Start background download
-        Task.Run(async () =>
+        if (onLoaded == null) return null;
+
+        System.Windows.Application.Current?.Dispatcher?.BeginInvoke(new Action(async () =>
         {
+            if (_weakCache.TryGetValue(url, out var w) && w.TryGetTarget(out var cached))
+            {
+                onLoaded(cached);
+                return;
+            }
+
+            if (_downloading.ContainsKey(url)) return;
+
             try
             {
-                var data = await _httpClient.GetByteArrayAsync(url);
+                await _downloadSemaphore.WaitAsync();
                 
-                // Jump back to UI thread to create the BitmapImage
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(url);
+                bitmap.DecodePixelWidth = 32;
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+
+                if (bitmap.IsDownloading)
                 {
-                    using var ms = new MemoryStream(data);
-                    var bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.StreamSource = ms;
-                    bitmap.DecodePixelWidth = 48;
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-                    bitmap.Freeze();
-
-                    _cache[url] = bitmap;
-                    onLoaded(bitmap);
-                });
+                    _downloading[url] = bitmap;
+                    bitmap.DownloadCompleted += (s, e) =>
+                    {
+                        _downloading.TryRemove(url, out _);
+                        _downloadSemaphore.Release();
+                        FinalizeImage(url, bitmap, onLoaded);
+                    };
+                    bitmap.DownloadFailed += (s, e) => 
+                    {
+                        _downloading.TryRemove(url, out _);
+                        _downloadSemaphore.Release();
+                    };
+                }
+                else
+                {
+                    _downloadSemaphore.Release();
+                    FinalizeImage(url, bitmap, onLoaded);
+                }
             }
-            catch { /* Fallback to null/placeholder */ }
-        });
+            catch (Exception)
+            {
+                _downloading.TryRemove(url, out _);
+                if (_downloadSemaphore.CurrentCount < 3) _downloadSemaphore.Release();
+            }
+        }));
 
-        return null; // Return null immediately while loading
+        return null;
+    }
+
+    private static void FinalizeImage(string url, BitmapImage bitmap, Action<BitmapImage> onLoaded)
+    {
+        try { bitmap.Freeze(); } catch { }
+        _weakCache[url] = new WeakReference<BitmapImage>(bitmap);
+        
+        // LRU-ish strong cache
+        _strongCache.Enqueue(bitmap);
+        while (_strongCache.Count > MaxStrongCache)
+            _strongCache.TryDequeue(out _);
+
+        onLoaded(bitmap);
     }
 }
+
+
+
+
+
+
+

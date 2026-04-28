@@ -15,24 +15,24 @@ public class SetupTask : INotifyPropertyChanged
     public TaskType Type      { get; init; }
     public InstallMethod? Method { get; init; }
     public string? PackageId   { get; init; }
-    public string? FallbackUrl { get; init; }
+    public Uri? FallbackUrl    { get; init; }
     public string? TweakScript { get; init; }
     public string Category    { get; init; } = "General";
     public string SubCategory { get; init; } = "Misc";
     public string Icon        { get; init; } = "";
-    public string? IconUrl    { get; init; }
+    public Uri? IconUrl       { get; init; }
 
-    public bool HasIcon => !string.IsNullOrWhiteSpace(Icon) || !string.IsNullOrWhiteSpace(IconUrl);
+    public bool HasIcon => !string.IsNullOrWhiteSpace(Icon) || IconUrl != null;
 
     private System.Windows.Media.ImageSource? _iconImage;
     public System.Windows.Media.ImageSource? IconImage
     {
         get
         {
-            if (_iconImage == null && !string.IsNullOrEmpty(IconUrl))
+            if (_iconImage == null && IconUrl != null)
             {
                 // Trigger lazy load
-                _iconImage = Services.AsyncImageLoader.GetImage(IconUrl, img => {
+                _iconImage = Services.AsyncImageLoader.GetImage(IconUrl.ToString(), img => {
                     _iconImage = img;
                     OnPropertyChanged();
                 });
@@ -40,6 +40,7 @@ public class SetupTask : INotifyPropertyChanged
             return _iconImage;
         }
     }
+
 
     public string Description { get; init; } = "";
     public int RetryMax       { get; init; } = 3;
@@ -55,7 +56,14 @@ public class SetupTask : INotifyPropertyChanged
     public TaskStatus Status
     {
         get => _status;
-        set { _status = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); OnPropertyChanged(nameof(IsRunning)); OnPropertyChanged(nameof(IsDone)); }
+        set 
+        { 
+            _status = value; 
+            OnPropertyChanged(); 
+            OnPropertyChanged(nameof(StatusText)); 
+            OnPropertyChanged(nameof(IsRunning)); 
+            OnPropertyChanged(nameof(IsDone)); 
+        }
     }
 
     private string _statusText = "Queued";
@@ -69,6 +77,7 @@ public class SetupTask : INotifyPropertyChanged
     public bool IsDone    => Status is TaskStatus.Success or TaskStatus.Failed or TaskStatus.Skipped;
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+    protected virtual void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
+

@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using WinZ.Models;
+using WinZ.Services;
+using System;
 
 namespace WinZ.ViewModels;
 
@@ -24,29 +26,31 @@ public class AdvancedViewModel : INotifyPropertyChanged
     public int SelectedCount =>
         Tabs.SelectMany(t => t.SubGroups).SelectMany(g => g.Tasks).Count(task => task.IsSelected);
 
-    public void Load(IEnumerable<SetupTask> allTasks)
+    public void Load(IEnumerable<SetupTask>? allTasks)
     {
+        if (allTasks == null) return;
+        
         Tabs.Clear();
 
         // Advanced mode should start with a clean slate (nothing pre-checked)
-        var tasks = allTasks.ToList();
-        foreach (var t in tasks) t.IsSelected = false;
+        var tasksList = allTasks.ToList();
+        foreach (var t in tasksList) t.IsSelected = false;
 
-        var groupedByCategory = tasks
+        var groupedByCategory = tasksList
             .GroupBy(t => t.Category)
-            .OrderBy(g => CategoryOrder(g.Key));
+            .OrderBy(g => CategoryOrder(g.Key ?? "Other"));
 
         foreach (var catGroup in groupedByCategory)
         {
-            var tab = new CategoryTab(catGroup.Key);
+            var tab = new CategoryTab(catGroup.Key ?? "Other");
             var subGrouped = catGroup
                 .GroupBy(t => t.SubCategory)
                 .OrderBy(g => g.Key);
 
             foreach (var sub in subGrouped)
             {
-                var sg = new TaskGroup(sub.Key, sub.ToList());
-                sg.SelectionChanged += () => OnPropertyChanged(nameof(SelectedCount));
+                var sg = new TaskGroup(sub.Key ?? "Other", sub.ToList());
+                sg.SelectionChanged += (_, _) => OnPropertyChanged(nameof(SelectedCount));
                 tab.SubGroups.Add(sg);
             }
             Tabs.Add(tab);
@@ -54,7 +58,9 @@ public class AdvancedViewModel : INotifyPropertyChanged
 
         SelectedTab = Tabs.FirstOrDefault();
         OnPropertyChanged(nameof(SelectedCount));
+        MemoryService.Optimize();
     }
+
 
     private static int CategoryOrder(string cat) => cat switch
     {
@@ -70,7 +76,7 @@ public class AdvancedViewModel : INotifyPropertyChanged
     };
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    void OnPropertyChanged([CallerMemberName] string? n = null)
+    protected virtual void OnPropertyChanged([CallerMemberName] string? n = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }
 
@@ -79,10 +85,13 @@ public class CategoryTab : INotifyPropertyChanged
     public string Name { get; }
     public ObservableCollection<TaskGroup> SubGroups { get; } = new();
 
+    public IEnumerable<TaskGroup> AllGroups => SubGroups;
+
+
     // Split sub-groups into 3 columns for stable masonry-like stacking
-    public IEnumerable<TaskGroup> Column1 => SubGroups.Where((_, i) => i % 3 == 0);
-    public IEnumerable<TaskGroup> Column2 => SubGroups.Where((_, i) => i % 3 == 1);
-    public IEnumerable<TaskGroup> Column3 => SubGroups.Where((_, i) => i % 3 == 2);
+    public IEnumerable<TaskGroup> Column1 => SubGroups.Where((_, i) => i >= 0 && i % 3 == 0);
+    public IEnumerable<TaskGroup> Column2 => SubGroups.Where((_, i) => i >= 0 && i % 3 == 1);
+    public IEnumerable<TaskGroup> Column3 => SubGroups.Where((_, i) => i >= 0 && i % 3 == 2);
 
     public CategoryTab(string name)
     {
@@ -96,7 +105,7 @@ public class CategoryTab : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    void OnPropertyChanged([CallerMemberName] string? n = null)
+    protected virtual void OnPropertyChanged([CallerMemberName] string? n = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }
 
@@ -114,7 +123,7 @@ public class TaskGroup : INotifyPropertyChanged
 
     public System.Windows.Input.ICommand ToggleExpandCommand { get; }
 
-    public event System.Action? SelectionChanged;
+    public event EventHandler? SelectionChanged;
 
     public bool AllSelected
     {
@@ -123,7 +132,7 @@ public class TaskGroup : INotifyPropertyChanged
         {
             foreach (var t in Tasks) t.IsSelected = value;
             OnPropertyChanged();
-            SelectionChanged?.Invoke();
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -131,19 +140,20 @@ public class TaskGroup : INotifyPropertyChanged
     {
         GroupName = name;
         ToggleExpandCommand = new RelayCommand(() => IsExpanded = !IsExpanded);
-        Tasks = new ObservableCollection<SetupTask>(tasks);
+        Tasks = new ObservableCollection<SetupTask>(tasks ?? new());
         foreach (var t in Tasks)
             t.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(SetupTask.IsSelected))
                 {
                     OnPropertyChanged(nameof(AllSelected));
-                    SelectionChanged?.Invoke();
+                    SelectionChanged?.Invoke(this, EventArgs.Empty);
                 }
             };
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    void OnPropertyChanged([CallerMemberName] string? n = null)
+    protected virtual void OnPropertyChanged([CallerMemberName] string? n = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }
+

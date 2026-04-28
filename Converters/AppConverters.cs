@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using WinZ.Models;
 
 namespace WinZ.Converters;
@@ -10,7 +9,7 @@ namespace WinZ.Converters;
 /// TaskStatus → accent SolidColorBrush
 public class StatusToBrushConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object p, CultureInfo c)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not TaskStatus s) return Brushes.Transparent;
         return s switch
@@ -22,13 +21,13 @@ public class StatusToBrushConverter : IValueConverter
             _                  => new SolidColorBrush(Color.FromRgb(0x2A, 0x2A, 0x32)),
         };
     }
-    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotImplementedException();
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
 /// TaskStatus → icon string
 public class StatusToIconConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object p, CultureInfo c)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not TaskStatus s) return "";
         return s switch
@@ -40,21 +39,21 @@ public class StatusToIconConverter : IValueConverter
             _                  => "○",
         };
     }
-    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotImplementedException();
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
 /// bool IsSelected → strikethrough opacity (0.45 or 1.0)
 public class BoolToOpacityConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object p, CultureInfo c)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         => value is bool b && b ? 1.0 : 0.45;
-    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotImplementedException();
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
 /// TaskType → short label string
 public class TaskTypeToLabelConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object p, CultureInfo c)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not TaskType tt) return "";
         return tt switch
@@ -65,13 +64,13 @@ public class TaskTypeToLabelConverter : IValueConverter
             _                => ""
         };
     }
-    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotImplementedException();
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
 /// TaskType → badge color
 public class TaskTypeToBrushConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object p, CultureInfo c)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not TaskType tt) return Brushes.Transparent;
         return tt switch
@@ -82,13 +81,13 @@ public class TaskTypeToBrushConverter : IValueConverter
             _                => Brushes.Transparent
         };
     }
-    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotImplementedException();
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
 /// bool or non-null string → Visibility
 public class BoolToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object p, CultureInfo c)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         bool visible = value switch
         {
@@ -99,30 +98,30 @@ public class BoolToVisibilityConverter : IValueConverter
         };
         return visible ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
     }
-    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotImplementedException();
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
 /// string IconUrl -> Visibility (Visible if not null/empty)
 public class IconUrlToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object p, CultureInfo c)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         => string.IsNullOrEmpty(value as string) ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
-    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotImplementedException();
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
 /// string IconUrl -> Visibility (Visible if null/empty)
 public class IconUrlToInverseVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object p, CultureInfo c)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         => string.IsNullOrEmpty(value as string) ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
-    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotImplementedException();
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
 
 /// inverted bool → Visibility
 public class InverseBoolToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object p, CultureInfo c)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         bool hide = value switch
         {
@@ -133,5 +132,6 @@ public class InverseBoolToVisibilityConverter : IValueConverter
         };
         return hide ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
     }
-    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotImplementedException();
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
+

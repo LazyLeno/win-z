@@ -13,6 +13,9 @@ public class RetryPolicy(LogService log)
         int maxRetries,
         CancellationToken ct)
     {
+        ArgumentNullException.ThrowIfNull(action);
+        string name = taskName ?? "Unknown Task";
+
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
             if (ct.IsCancellationRequested) return false;
@@ -22,18 +25,31 @@ public class RetryPolicy(LogService log)
                 bool result = await action(ct);
                 if (result) return true;
             }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
             catch (Exception ex)
             {
-                log.Error($"{taskName} — attempt {attempt}/{maxRetries} threw: {ex.Message}");
+                log.Error(string.Format("{0} — attempt {1}/{2} threw: {3}", name, attempt, maxRetries, ex.Message));
             }
 
             if (attempt < maxRetries)
             {
                 int delay = attempt * 2000; // exponential backoff
-                log.Info($"Retrying {taskName} in {delay/1000}s...");
-                await Task.Delay(delay, ct);
+                log.Info(string.Format("Retrying {0} in {1}s...", name, delay/1000));
+                
+                try
+                {
+                    await Task.Delay(delay, ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
             }
         }
         return false;
     }
 }
+

@@ -13,14 +13,26 @@ public static class ElevationService
 
     public static void RelaunchAsAdmin()
     {
+        string? path = Environment.ProcessPath;
+        if (string.IsNullOrEmpty(path)) return;
+
         var proc = new ProcessStartInfo
         {
             UseShellExecute = true,
             WorkingDirectory = Environment.CurrentDirectory,
-            FileName = Environment.ProcessPath!,
+            FileName = path,
             Verb = "runas"
         };
-        Process.Start(proc);
-        Application.Current.Shutdown();
+        
+        try
+        {
+            Process.Start(proc);
+            Application.Current.Shutdown();
+        }
+        catch (Exception)
+        {
+            // If the user cancels the UAC prompt, we stay open
+        }
     }
 }
+

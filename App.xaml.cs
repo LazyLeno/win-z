@@ -6,15 +6,21 @@ namespace WinZ;
 
 public partial class App : Application
 {
-    protected override void OnStartup(StartupEventArgs e)
+    protected override void OnStartup(StartupEventArgs? e)
     {
         // Catch any unhandled UI thread exceptions and show them
-        DispatcherUnhandledException += (_, ex) =>
+        DispatcherUnhandledException += (s, ex) =>
         {
-            MessageBox.Show(
-                $"Unhandled error:\n\n{ex.Exception.GetType().Name}\n{ex.Exception.Message}\n\n{ex.Exception.StackTrace}",
-                "WinZ – Fatal Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            if (ex.Exception != null)
+            {
+                MessageBox.Show(
+                    string.Format("Unhandled error:\n\n{0}\n{1}\n\n{2}", 
+                        ex.Exception.GetType().Name, 
+                        ex.Exception.Message, 
+                        ex.Exception.StackTrace),
+                    "WinZ – Fatal Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             ex.Handled = true;
             Shutdown(1);
         };
@@ -33,6 +39,8 @@ public partial class App : Application
                 Shutdown();
             return;
         }
-        base.OnStartup(e);
+        
+        if (e != null) base.OnStartup(e);
     }
 }
+

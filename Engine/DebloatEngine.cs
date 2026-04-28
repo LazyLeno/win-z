@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using WinZ.Models;
 using WinZ.Services;
@@ -10,16 +11,24 @@ public class DebloatEngine(LogService log)
 {
     public async Task<bool> RemoveAsync(SetupTask task, bool force, CancellationToken ct)
     {
+        ArgumentNullException.ThrowIfNull(task);
+        
+        if (string.IsNullOrEmpty(task.PackageId))
+        {
+            log.Error(string.Format("No PackageId for: {0}", task.Name));
+            return false;
+        }
+
         var script = force
-            ? $"Get-AppxPackage -AllUsers *{task.PackageId}* | Remove-AppxPackage -AllUsers; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*{task.PackageId}*' | Remove-AppxProvisionedPackage -Online"
-            : $"Get-AppxPackage *{task.PackageId}* | Remove-AppxPackage";
+            ? string.Format("Get-AppxPackage -AllUsers *{0}* | Remove-AppxPackage -AllUsers; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*{0}*' | Remove-AppxProvisionedPackage -Online", task.PackageId)
+            : string.Format("Get-AppxPackage *{0}* | Remove-AppxPackage", task.PackageId);
 
         log.Cmd(script);
 
         var psi = new ProcessStartInfo
         {
             FileName = "powershell.exe",
-            Arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{script.Replace("\"", "\\\"")}\"",
+            Arguments = string.Format("-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{0}\"", script.Replace("\"", "\\\"")),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -29,11 +38,22 @@ public class DebloatEngine(LogService log)
         using var p = new Process { StartInfo = psi };
         p.OutputDataReceived += (_, e) => { if (e.Data is not null) log.Info(e.Data); };
         p.ErrorDataReceived  += (_, e) => { if (e.Data is not null) log.Error(e.Data); };
-        p.Start(); p.BeginOutputReadLine(); p.BeginErrorReadLine();
+        
+        if (!p.Start()) return false;
+        
+        p.BeginOutputReadLine(); 
+        p.BeginErrorReadLine();
+        
         await p.WaitForExitAsync(ct);
 
-        if (p.ExitCode == 0) { log.Ok($"Removed: {task.Name}"); return true; }
-        log.Error($"Removal failed: {task.Name} (exit {p.ExitCode})");
+        if (p.ExitCode == 0) 
+        { 
+            log.Ok(string.Format("Removed: {0}", task.Name)); 
+            return true; 
+        }
+        
+        log.Error(string.Format("Removal failed: {0} (exit {1})", task.Name, p.ExitCode));
         return false;
     }
 }
+

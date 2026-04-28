@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using WinZ.Models;
 using WinZ.ViewModels;
 using WinZ.Services;
 
@@ -23,11 +22,11 @@ public partial class HomePage : Page
         try
         {
             var tasks = _dataService.LoadTasks();
-            NavigationService.Navigate(new ExpressReviewPage(tasks));
+            NavigationService?.Navigate(new ExpressReviewPage(tasks));
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to load master config:\n{ex.Message}", "WinZ – Master Config Error",
+            MessageBox.Show(string.Format("Failed to load master config:\n{0}", ex.Message), "WinZ – Master Config Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -39,11 +38,11 @@ public partial class HomePage : Page
             var tasks = _dataService.LoadTasks();
             var vm = new AdvancedViewModel();
             vm.Load(tasks);
-            NavigationService.Navigate(new AdvancedPage(vm));
+            NavigationService?.Navigate(new AdvancedPage(vm));
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to load master config:\n{ex.Message}", "WinZ – Master Config Error",
+            MessageBox.Show(string.Format("Failed to load master config:\n{0}", ex.Message), "WinZ – Master Config Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -59,7 +58,14 @@ public partial class HomePage : Page
                 MessageBox.Show("Database successfully reset to master seed.", "WinZ – Reset Success");
             }
         }
-        catch (Exception ex) { MessageBox.Show(ex.Message, "Reset Error"); }
+        catch (IOException ex)
+        {
+            MessageBox.Show(string.Format("File error during reset: {0}", ex.Message), "Reset Error");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Reset Error");
+        }
     }
 
     private void Export_Click(object sender, RoutedEventArgs e)
@@ -69,6 +75,14 @@ public partial class HomePage : Page
             _dataService.ExportToJson("winz_config_export.json");
             MessageBox.Show("Config exported to winz_config_export.json", "WinZ – Export Success");
         }
-        catch (Exception ex) { MessageBox.Show(ex.Message, "Export Error"); }
+        catch (IOException ex)
+        {
+            MessageBox.Show(string.Format("File error during export: {0}", ex.Message), "Export Error");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Export Error");
+        }
     }
 }
+

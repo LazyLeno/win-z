@@ -9,6 +9,7 @@ using System.Windows;
 using WinZ.Engine;
 using WinZ.Models;
 using WinZ.Services;
+using System;
 using TaskStatus = WinZ.Models.TaskStatus;
 
 namespace WinZ.ViewModels;
@@ -38,52 +39,66 @@ public class RunningViewModel : INotifyPropertyChanged
 
     public List<SetupResult>? Results { get; private set; }
 
-    public event System.Action<List<SetupResult>>? Completed;
+    public event EventHandler<List<SetupResult>>? Completed;
 
     public RunningViewModel(IEnumerable<SetupTask> tasks, LogService log)
     {
         _log    = log;
         _engine = new InstallEngine(log);
 
-        foreach (var t in tasks.Where(t => t.IsSelected))
-            Tasks.Add(t);
-
-        _engine.TaskStarted += t => Application.Current.Dispatcher.Invoke(() =>
+        if (tasks != null)
         {
-            CurrentTask = t.Name;
+            foreach (var t in tasks.Where(t => t.IsSelected))
+                Tasks.Add(t);
+        }
+
+        _engine.TaskStarted += (s, t) => Application.Current?.Dispatcher?.Invoke(() =>
+        {
+            CurrentTask = t.Name ?? "";
             SubText = t.Type switch
             {
-                TaskType.Install => $"Installing via {t.Method}",
+                TaskType.Install => string.Format("Installing via {0}", t.Method),
                 TaskType.Tweak   => "Applying system tweak",
                 TaskType.Remove  => "Removing via PowerShell",
                 _                => ""
             };
         });
 
-        _engine.TaskCompleted += (t, ok) => Application.Current.Dispatcher.Invoke(() =>
+        _engine.TaskCompleted += (s, args) => Application.Current?.Dispatcher?.Invoke(() =>
         {
             Progress++;
         });
 
-        log.LineAppended += line => Application.Current.Dispatcher.Invoke(() =>
-            LogLines.Add(line));
+        _log.LineAppended += line => Application.Current?.Dispatcher?.Invoke(() =>
+        {
+            if (line != null) LogLines.Add(line);
+        });
     }
 
-    public async Task RunAsync(CancellationToken ct = default)
+    public Task RunAsync()
     {
-        Results    = await _engine.RunAsync(Tasks, ct: ct);
+        return RunAsync(CancellationToken.None);
+    }
 
-        // Persistent history
-        foreach (var r in Results) _dataService.SaveResult(r);
+    public async Task RunAsync(CancellationToken ct)
+    {
+        Results = await _engine.RunAsync(Tasks, false, ct);
 
-        IsComplete = true;
-        CurrentTask = "Setup complete";
-        SubText = $"{Results.Count(r => r.Status == TaskStatus.Success)} succeeded · " +
-                  $"{Results.Count(r => r.Status == TaskStatus.Failed)} failed";
-        Completed?.Invoke(Results);
+        if (Results != null)
+        {
+            foreach (var r in Results) _dataService.SaveResult(r);
+
+            IsComplete = true;
+            CurrentTask = "Setup complete";
+            SubText = string.Format("{0} succeeded · {1} failed", 
+                Results.Count(r => r.Status == TaskStatus.Success),
+                Results.Count(r => r.Status == TaskStatus.Failed));
+            Completed?.Invoke(this, Results);
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    void OnPC([CallerMemberName] string? n = null)
+    protected virtual void OnPC([CallerMemberName] string? n = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }
+

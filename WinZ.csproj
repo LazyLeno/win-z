@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Title>WinZ</Title>
+    <Description>Windows Optimization Utility</Description>
     <RootNamespace>WinZ</RootNamespace>
+
     <AssemblyName>WinZ</AssemblyName>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>

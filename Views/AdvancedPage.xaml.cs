@@ -19,6 +19,14 @@ public partial class AdvancedPage : Page
         UpdateCount();
     }
 
+    private void Page_Unloaded(object sender, RoutedEventArgs e)
+    {
+        MemoryService.Optimize();
+    }
+
+
+
+
     private void UpdateCount()
     {
         int n = _vm.SelectedCount;

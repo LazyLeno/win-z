@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using WinZ.Engine;
+using WinZ.Services;
 using WinZ.ViewModels;
 
 namespace WinZ.Views;
@@ -11,6 +12,12 @@ public partial class RunningPage : Page
     private readonly RunningViewModel _vm;
     private bool _logOpen    = false;
     private bool _navigated  = false;   // guard against double navigation
+
+    private void Page_Unloaded(object sender, RoutedEventArgs e)
+    {
+        MemoryService.Optimize();
+    }
+
 
     public RunningPage(RunningViewModel vm)
     {
@@ -76,9 +83,10 @@ public partial class RunningPage : Page
         }
     }
 
-    private void NavigateToSummary(List<SetupResult> results)
+    private void NavigateToSummary(object? sender, List<SetupResult> results)
     {
-        if (_navigated) return;
+        if (_navigated || results == null) return;
+
         _navigated = true;
 
         // Fill progress bar to 100%

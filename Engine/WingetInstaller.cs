@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using WinZ.Models;
 using WinZ.Services;
@@ -10,12 +11,20 @@ public class WingetInstaller(LogService log)
 {
     public async Task<bool> InstallAsync(SetupTask task, CancellationToken ct)
     {
-        log.Cmd($"winget install --id {task.PackageId} --silent --accept-package-agreements --accept-source-agreements");
+        ArgumentNullException.ThrowIfNull(task);
+        
+        if (string.IsNullOrEmpty(task.PackageId))
+        {
+            log.Error(string.Format("No PackageId for: {0}", task.Name));
+            return false;
+        }
+
+        log.Cmd(string.Format("winget install --id {0} --silent --accept-package-agreements --accept-source-agreements", task.PackageId));
 
         var psi = new ProcessStartInfo
         {
             FileName = "winget",
-            Arguments = $"install --id {task.PackageId} --silent --accept-package-agreements --accept-source-agreements",
+            Arguments = string.Format("install --id {0} --silent --accept-package-agreements --accept-source-agreements", task.PackageId),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -27,7 +36,8 @@ public class WingetInstaller(LogService log)
         p.OutputDataReceived += (_, e) => { if (e.Data is not null) log.Info(e.Data); };
         p.ErrorDataReceived  += (_, e) => { if (e.Data is not null) log.Error(e.Data); };
 
-        p.Start();
+        if (!p.Start()) return false;
+        
         p.BeginOutputReadLine();
         p.BeginErrorReadLine();
 
@@ -35,11 +45,11 @@ public class WingetInstaller(LogService log)
 
         if (p.ExitCode == 0)
         {
-            log.Ok($"{task.Name} installed successfully.");
+            log.Ok(string.Format("{0} installed successfully.", task.Name));
             return true;
         }
 
-        log.Error($"{task.Name} failed — winget exit code {p.ExitCode} (0x{p.ExitCode:X8})");
+        log.Error(string.Format("{0} failed — winget exit code {1} (0x{2:X8})", task.Name, p.ExitCode, p.ExitCode));
         return false;
     }
 
@@ -51,10 +61,13 @@ public class WingetInstaller(LogService log)
             {
                 RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true
             };
-            using var p = Process.Start(psi)!;
+            using var p = Process.Start(psi);
+            if (p == null) return false;
             await p.WaitForExitAsync();
             return p.ExitCode == 0;
         }
-        catch { return false; }
+        catch (OperationCanceledException) { return false; }
+        catch (Exception) { return false; }
     }
 }
+
