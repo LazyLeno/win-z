@@ -26,6 +26,13 @@ public class SetupTask : INotifyPropertyChanged
     public string Description { get; set; } = "";
     public int RetryMax       { get; set; } = 3;
 
+    private bool _shouldUninstallFirst;
+    public bool ShouldUninstallFirst
+    {
+        get => _shouldUninstallFirst;
+        set { _shouldUninstallFirst = value; OnPropertyChanged(); }
+    }
+
     private bool _isSelected;
     public bool IsSelected
     {
@@ -45,6 +52,15 @@ public class SetupTask : INotifyPropertyChanged
             OnPropertyChanged(nameof(IsDone));
         }
     }
+
+    private int _progress;
+    public int Progress
+    {
+        get => _progress;
+        set { _progress = value; OnPropertyChanged(); }
+    }
+
+    public bool RequiresExplorerRestart { get; set; }
 
     public bool IsRunning => Status == TaskStatus.Running;
     public bool IsDone    => Status is TaskStatus.Success or TaskStatus.Failed or TaskStatus.Skipped;

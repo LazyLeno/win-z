@@ -35,8 +35,8 @@ public class TweakEngine(LogService log)
         }
         else
         {
-            // Spawn external powershell to keep main process memory at <15MB
-            return await Task.Run(() => RunExternalPowerShell(task.TweakScript), ct);
+            // Use async version to prevent UI/Engine hang during heavy scripts (like IDM install)
+            return await RunExternalPowerShellAsync(task.TweakScript, ct);
         }
     }
 
@@ -78,7 +78,7 @@ public class TweakEngine(LogService log)
         }
     }
 
-    private bool RunExternalPowerShell(string script)
+    private async Task<bool> RunExternalPowerShellAsync(string script, CancellationToken ct)
     {
         var psi = new ProcessStartInfo
         {
@@ -90,15 +90,17 @@ public class TweakEngine(LogService log)
             RedirectStandardError = true
         };
 
-        using var p = Process.Start(psi);
-        if (p == null) return false;
+        using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
+        
+        p.OutputDataReceived += (_, e) => { if (e.Data is not null) log.Info(e.Data); };
+        p.ErrorDataReceived  += (_, e) => { if (e.Data is not null) log.Error(e.Data); };
 
-        string output = p.StandardOutput.ReadToEnd();
-        string error = p.StandardError.ReadToEnd();
-        p.WaitForExit();
+        if (!p.Start()) return false;
 
-        if (!string.IsNullOrWhiteSpace(output)) log.Info(output);
-        if (!string.IsNullOrWhiteSpace(error)) log.Error(error);
+        p.BeginOutputReadLine();
+        p.BeginErrorReadLine();
+
+        await p.WaitForExitAsync(ct);
 
         return p.ExitCode == 0;
     }

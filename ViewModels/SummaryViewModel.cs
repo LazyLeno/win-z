@@ -25,9 +25,13 @@ public class SummaryViewModel
         Failed = 0;
         Skipped = 0;
 
-        foreach (var r in results)
+        var sorted = results
+            .Where(r => r != null)
+            .OrderBy(r => r.Status == TaskStatus.Success ? 0 : 1) // Successful on top
+            .ThenBy(r => r.Name);
+
+        foreach (var r in sorted)
         {
-            if (r == null) continue;
             Items.Add(new SummaryItem(r));
             switch (r.Status)
             {

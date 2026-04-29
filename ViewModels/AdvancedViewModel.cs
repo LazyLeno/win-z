@@ -21,6 +21,8 @@ public class AdvancedViewModel : INotifyPropertyChanged
         set { _selectedTab = value; OnPropertyChanged(); }
     }
 
+    public IEnumerable<SetupTask> AllTasks => Tabs.SelectMany(t => t.SubGroups).SelectMany(g => g.Tasks);
+
     public IEnumerable<SetupTask> SelectedTasks =>
         Tabs.SelectMany(t => t.SubGroups).SelectMany(g => g.Tasks).Where(task => task.IsSelected);
 

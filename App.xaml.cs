@@ -6,9 +6,11 @@ namespace WinZ;
 
 public partial class App : Application
 {
+    public static readonly System.Threading.CancellationTokenSource GlobalCts = new();
+
     protected override void OnStartup(StartupEventArgs? e)
     {
-        // Catch any unhandled UI thread exceptions and show them
+        // ... (existing exception handling)
         DispatcherUnhandledException += (s, ex) =>
         {
             if (ex.Exception != null)
@@ -41,6 +43,12 @@ public partial class App : Application
         }
         
         if (e != null) base.OnStartup(e);
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        GlobalCts.Cancel(); // Force stop all running engines on close
+        base.OnExit(e);
     }
 }
 

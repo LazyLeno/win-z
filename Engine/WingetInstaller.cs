@@ -9,7 +9,9 @@ namespace WinZ.Engine;
 
 public class WingetInstaller(LogService log)
 {
-    public async Task<bool> InstallAsync(SetupTask task, CancellationToken ct)
+    public Task<bool> InstallAsync(SetupTask task, CancellationToken ct) => InstallAsync(task, false, ct);
+
+    public async Task<bool> InstallAsync(SetupTask task, bool force, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(task);
         
@@ -19,12 +21,13 @@ public class WingetInstaller(LogService log)
             return false;
         }
 
-        log.Cmd(string.Format("winget install --id {0} --silent --accept-package-agreements --accept-source-agreements", task.PackageId));
+        string forceFlag = force ? " --force" : "";
+        log.Cmd(string.Format("winget install --id {0} --silent --accept-package-agreements --accept-source-agreements{1}", task.PackageId, forceFlag));
 
         var psi = new ProcessStartInfo
         {
             FileName = "winget",
-            Arguments = string.Format("install --id {0} --silent --accept-package-agreements --accept-source-agreements", task.PackageId),
+            Arguments = string.Format("install --id {0} --silent --accept-package-agreements --accept-source-agreements{1}", task.PackageId, forceFlag),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -51,6 +54,34 @@ public class WingetInstaller(LogService log)
 
         log.Error(string.Format("{0} failed — winget exit code {1} (0x{2:X8})", task.Name, p.ExitCode, p.ExitCode));
         return false;
+    }
+
+    public async Task<bool> UninstallAsync(SetupTask task, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+        if (string.IsNullOrEmpty(task.PackageId)) return false;
+
+        log.Info(string.Format("Uninstalling {0} via Winget...", task.Name));
+        var psi = new ProcessStartInfo
+        {
+            FileName = "winget",
+            Arguments = string.Format("uninstall --id {0} --silent --accept-source-agreements", task.PackageId),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
+        p.OutputDataReceived += (_, e) => { if (e.Data is not null) log.Info(e.Data); };
+        p.ErrorDataReceived  += (_, e) => { if (e.Data is not null) log.Error(e.Data); };
+
+        if (!p.Start()) return false;
+        p.BeginOutputReadLine();
+        p.BeginErrorReadLine();
+
+        await p.WaitForExitAsync(ct);
+        return p.ExitCode == 0;
     }
 
     public static async Task<bool> IsAvailableAsync()

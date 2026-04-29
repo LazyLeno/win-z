@@ -50,7 +50,18 @@
             <ItemsControl x:Name="ResultList" Margin="20,10">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="#212121" BorderBrush="#2D2D2D" BorderThickness="0,0,0,1" Padding="10,8">
+                        <Border BorderBrush="#2D2D2D" BorderThickness="0,0,0,1" Padding="10,8">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#212121"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Status}" Value="Success">
+                                            <Setter Property="Background" Value="#1B2B1B"/>
+                                            <Setter Property="BorderBrush" Value="#2A3D2A"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>

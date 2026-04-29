@@ -40,22 +40,55 @@
                     <DataTemplate>
                         <Border Background="#212121" BorderBrush="#2D2D2D" BorderThickness="0,0,0,1" Padding="10,8">
                             <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Grid.Column="0" Text="{Binding Status, Converter={StaticResource StatusToIcon}}"
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Status, Converter={StaticResource StatusToIcon}}"
                                            FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                           Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
+                                           Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}"
+                                           RenderTransformOrigin="0.5,0.5">
+                                    <TextBlock.RenderTransform>
+                                        <RotateTransform Angle="0"/>
+                                    </TextBlock.RenderTransform>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                    <DataTrigger.EnterActions>
+                                                        <BeginStoryboard x:Name="SpinningAnim">
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                                 From="0" To="360" Duration="0:0:1.2" RepeatBehavior="Forever"/>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </DataTrigger.EnterActions>
+                                                    <DataTrigger.ExitActions>
+                                                        <RemoveStoryboard BeginStoryboardName="SpinningAnim"/>
+                                                    </DataTrigger.ExitActions>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
 
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                <StackPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
                                     <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12" Foreground="White"/>
                                     <TextBlock Text="{Binding Category}" FontSize="10" Foreground="#555555"/>
                                 </StackPanel>
 
-                                <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StatusText}" FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
+
+                                <ProgressBar Grid.Row="1" Grid.ColumnSpan="3" Height="2" Value="{Binding Progress}" Maximum="100" 
+                                             Background="Transparent" Foreground="{StaticResource AccentBrush}" BorderThickness="0"
+                                             Margin="0,8,0,0" VerticalAlignment="Bottom"
+                                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"/>
                             </Grid>
                         </Border>
                     </DataTemplate>

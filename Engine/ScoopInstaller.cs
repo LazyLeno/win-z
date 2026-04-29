@@ -4,12 +4,15 @@ using WinZ.Models;
 using WinZ.Services;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace WinZ.Engine;
 
 public class ScoopInstaller(LogService log)
 {
-    public async Task<bool> InstallAsync(SetupTask task, CancellationToken ct)
+    public Task<bool> InstallAsync(SetupTask task, CancellationToken ct) => InstallAsync(task, false, ct);
+
+    public async Task<bool> InstallAsync(SetupTask task, bool force, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(task);
         
@@ -20,12 +23,13 @@ public class ScoopInstaller(LogService log)
         }
 
         // Check if we need to add a bucket (e.g. extras/pear-desktop)
-        if (task.PackageId.Contains('/'))
+        if (task.PackageId.Contains('/') && !task.PackageId.StartsWith("http", StringComparison.OrdinalIgnoreCase))
         {
             string bucket = task.PackageId.Split('/')[0];
             await EnsureBucketAsync(bucket, ct);
         }
 
+        // Remove force flag as Scoop was rejecting it; we'll rely on the HardCleanup in UninstallAsync
         log.Cmd(string.Format("scoop install {0}", task.PackageId));
 
         var psi = new ProcessStartInfo
@@ -60,6 +64,72 @@ public class ScoopInstaller(LogService log)
         return false;
     }
 
+    public async Task<bool> UninstallAsync(SetupTask task, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+        if (string.IsNullOrEmpty(task.PackageId)) return false;
+
+        log.Info(string.Format("Uninstalling {0} via Scoop...", task.Name));
+        string packageName = GetPackageName(task.PackageId);
+        
+        var psi = new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            Arguments = string.Format("-NoProfile -Command \"scoop uninstall {0}\"", packageName),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
+        p.OutputDataReceived += (_, e) => { if (e.Data is not null) log.Info(e.Data); };
+        p.ErrorDataReceived  += (_, e) => { if (e.Data is not null) log.Error(e.Data); };
+
+        if (!p.Start()) return false;
+        p.BeginOutputReadLine();
+        p.BeginErrorReadLine();
+
+        await p.WaitForExitAsync(ct);
+        
+        if (p.ExitCode != 0)
+        {
+            log.Info(string.Format("Standard Scoop uninstall failed for {0}. Attempting hard cleanup...", task.Name));
+            await HardCleanupAsync(packageName, ct);
+        }
+
+        return true; // We return true to allow the install step to proceed even if cleanup was needed
+    }
+
+    private async Task HardCleanupAsync(string packageName, CancellationToken ct)
+    {
+        // Manually remove the app folder and shims if Scoop is stuck
+        string cleanupScript = string.Format(
+            "$appPath = Join-Path $env:USERPROFILE 'scoop/apps/{0}'; " +
+            "if (Test-Path $appPath) {{ Remove-Item -Recurse -Force $appPath; Write-Host 'Removed app folder.' }}; " +
+            "$shimPath = Join-Path $env:USERPROFILE 'scoop/shims/{0}.*'; " +
+            "if (Test-Path $shimPath) {{ Remove-Item -Force $shimPath; Write-Host 'Removed shims.' }}", 
+            packageName);
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            Arguments = string.Format("-NoProfile -Command \"{0}\"", cleanupScript),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var p = Process.Start(psi);
+        if (p != null)
+        {
+            p.OutputDataReceived += (_, e) => { if (e.Data is not null) log.Info(e.Data); };
+            p.BeginOutputReadLine();
+            await p.WaitForExitAsync(ct);
+        }
+    }
+
     private async Task EnsureBucketAsync(string bucket, CancellationToken ct)
     {
         log.Info(string.Format("Checking Scoop bucket: {0}", bucket));
@@ -92,5 +162,25 @@ public class ScoopInstaller(LogService log)
             return p.ExitCode == 0;
         }
         catch { return false; }
+    }
+
+    private string GetPackageName(string packageId)
+    {
+        if (packageId.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var uri = new Uri(packageId);
+                return System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
+            }
+            catch { return packageId; }
+        }
+
+        if (packageId.Contains('/') && !packageId.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return packageId.Split('/').Last();
+        }
+
+        return packageId;
     }
 }

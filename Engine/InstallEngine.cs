@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using TaskStatus = WinZ.Models.TaskStatus;
 
 namespace WinZ.Engine;
@@ -18,6 +19,7 @@ public class InstallEngine
     private readonly TweakEngine _tweaks;
     private readonly DebloatEngine _debloat;
     private readonly RetryPolicy _retry;
+    private SetupTask? _activeTask;
 
     public event EventHandler<SetupTask>? TaskStarted;
     public event EventHandler<(SetupTask task, bool success)>? TaskCompleted;
@@ -31,6 +33,18 @@ public class InstallEngine
         _tweaks  = new TweakEngine(log);
         _debloat = new DebloatEngine(log);
         _retry   = new RetryPolicy(log);
+
+        // Parse progress from logs (e.g. "[1/5]")
+        _log.LineAppended += (line) =>
+        {
+            if (_activeTask == null) return;
+            var match = System.Text.RegularExpressions.Regex.Match(line, @"\[(\d+)/(\d+)\]");
+            if (match.Success && int.TryParse(match.Groups[1].Value, out int cur) && 
+                                 int.TryParse(match.Groups[2].Value, out int total) && total > 0)
+            {
+                _activeTask.Progress = (int)((double)cur / total * 100);
+            }
+        };
     }
 
     public Task<List<SetupResult>> RunAsync(IEnumerable<SetupTask> tasks)
@@ -60,18 +74,59 @@ public class InstallEngine
         if (!scoopAvailable && tasks.Any(t => t.IsSelected && t.Method == InstallMethod.Scoop))
             _log.Error("Scoop not found — tasks requiring Scoop will fail or fall back");
 
-        foreach (var task in tasks.Where(t => t.IsSelected))
+        bool explorerKilled = false;
+        var selectedTasks = tasks.Where(t => t.IsSelected).ToList();
+
+        foreach (var task in selectedTasks)
         {
             if (ct.IsCancellationRequested) break;
+
+            if (task.RequiresExplorerRestart && !explorerKilled)
+            {
+                _log.Info("Killing Explorer for optimized batch processing...");
+                KillExplorer();
+                explorerKilled = true;
+            }
+
             var result = await RunTaskWithHandlingAsync(task, forceDebloat, wingetAvailable, scoopAvailable, ct);
             if (result != null) results.Add(result);
+        }
+
+        if (explorerKilled)
+        {
+            _log.Info("Restarting Explorer after batch complete.");
+            StartExplorer();
         }
 
         return results;
     }
 
+    private void KillExplorer()
+    {
+        try
+        {
+            foreach (var p in Process.GetProcessesByName("explorer"))
+            {
+                p.Kill();
+                p.WaitForExit(2000);
+            }
+        }
+        catch { /* best-effort */ }
+    }
+
+    private void StartExplorer()
+    {
+        try
+        {
+            Process.Start("explorer.exe");
+        }
+        catch { /* best-effort */ }
+    }
+
     private async Task<SetupResult?> RunTaskWithHandlingAsync(SetupTask task, bool forceDebloat, bool wingetAvailable, bool scoopAvailable, CancellationToken ct)
     {
+        _activeTask = task;
+        task.Progress = 0;
         task.Status = TaskStatus.Running;
         TaskStarted?.Invoke(this, task);
         _log.Info(string.Format("--- BEGIN: {0} ---", task.Name));
@@ -79,6 +134,11 @@ public class InstallEngine
         bool ok = false;
         try
         {
+            if (task.ShouldUninstallFirst)
+            {
+                _log.Info(string.Format("Reinstall flag detected for {0}. Performing pre-uninstall...", task.Name));
+                await RunUninstallAsync(task, wingetAvailable, scoopAvailable, ct);
+            }
             ok = await ExecuteTaskAsync(task, forceDebloat, wingetAvailable, scoopAvailable, ct);
         }
         catch (OperationCanceledException)
@@ -93,6 +153,8 @@ public class InstallEngine
         }
 
         task.Status = ok ? TaskStatus.Success : TaskStatus.Failed;
+        task.Progress = 100;
+        _activeTask = null;
         TaskCompleted?.Invoke(this, (task, ok));
         
         var result = new SetupResult(task.Name, task.Status, ok ? null : string.Format("See log at {0}", _log.LogPath));
@@ -116,11 +178,11 @@ public class InstallEngine
     {
         if (task.Method == InstallMethod.Winget && wingetAvailable)
             return await _retry.ExecuteAsync(
-                t => _winget.InstallAsync(task, t), task.Name ?? "", task.RetryMax, ct);
+                t => _winget.InstallAsync(task, task.ShouldUninstallFirst, t), task.Name ?? "", task.RetryMax, ct);
 
         if (task.Method == InstallMethod.Scoop && scoopAvailable)
             return await _retry.ExecuteAsync(
-                t => _scoop.InstallAsync(task, t), task.Name ?? "", task.RetryMax, ct);
+                t => _scoop.InstallAsync(task, task.ShouldUninstallFirst, t), task.Name ?? "", task.RetryMax, ct);
 
         if (task.FallbackUrl != null)
         {
@@ -131,6 +193,17 @@ public class InstallEngine
 
         _log.Error(string.Format("No install method available for {0}", task.Name));
         return false;
+    }
+
+    private async Task<bool> RunUninstallAsync(SetupTask task, bool wingetAvailable, bool scoopAvailable, CancellationToken ct)
+    {
+        if (task.Method == InstallMethod.Winget && wingetAvailable)
+            return await _winget.UninstallAsync(task, ct);
+
+        if (task.Method == InstallMethod.Scoop && scoopAvailable)
+            return await _scoop.UninstallAsync(task, ct);
+
+        return true; // Tweaks or direct downloads don't have a specific uninstall in this context yet
     }
 }
 

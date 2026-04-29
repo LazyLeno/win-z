@@ -76,10 +76,40 @@ public partial class ExpressReviewPage : Page
         var selected = _tasks.Where(t => t.IsSelected).ToList();
         if (selected.Count == 0) return;
 
+        // Review Prompt (Custom Dialog)
+        var reviewDiag = new ReviewDialog(selected);
+        reviewDiag.Owner = Window.GetWindow(this);
+        reviewDiag.ShowDialog();
+
+        if (!reviewDiag.Result) return;
+
+        // Re-filter in case user unchecked items in the dialog
+        selected = selected.Where(t => t.IsSelected).ToList();
+        if (selected.Count == 0) return;
+
+        // Check for already installed items
+        var installedNames = _dataService.GetInstalledTaskNames();
+        var alreadyInstalled = selected.Where(t => installedNames.Contains(t.Name)).ToList();
+
+        if (alreadyInstalled.Any())
+        {
+            var diag = new ReinstallDialog(alreadyInstalled);
+            diag.Owner = Window.GetWindow(this);
+            diag.ShowDialog();
+
+            if (!diag.Result) return; // User clicked "Go Back"
+
+            // Set reinstall flags based on user choice
+            foreach (var item in diag.Items)
+            {
+                item.Task.ShouldUninstallFirst = item.IsReinstallSelected;
+            }
+        }
+
         using var log = new LogService();
         var vm  = new RunningViewModel(selected, log, _dataService);
         NavigationService?.Navigate(new RunningPage(vm));
-        await vm.RunAsync();
+        await vm.RunAsync(App.GlobalCts.Token);
     }
 }
 

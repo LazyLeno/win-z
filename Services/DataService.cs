@@ -18,7 +18,7 @@ public class DataService
     {
         var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinZ");
         Directory.CreateDirectory(appData);
-        _dbPath = Path.Combine(appData, "winz_vault_v10.db");
+        _dbPath = Path.Combine(appData, "winz_vault_v11.db");
 
         InitializeDatabase();
     }
@@ -44,9 +44,23 @@ public class DataService
                 SubCategory TEXT,
                 Description TEXT,
                 Icon TEXT,
+                Status TEXT,
                 IsSelected INTEGER,
-                RetryMax INTEGER
-            );
+                RetryMax INTEGER,
+                RequiresExplorerRestart INTEGER DEFAULT 0
+            );";
+        cmd.ExecuteNonQuery();
+
+        // Migration: Ensure column exists in older versions
+        try
+        {
+            cmd.CommandText = "ALTER TABLE SetupTasks ADD COLUMN RequiresExplorerRestart INTEGER DEFAULT 0";
+            cmd.ExecuteNonQuery();
+        }
+        catch { /* already exists */ }
+        
+        // ... rest of the tables ...
+        cmd.CommandText = @"
             CREATE TABLE IF NOT EXISTS InstallationHistory (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 TaskName TEXT,
@@ -86,8 +100,8 @@ public class DataService
                 using var cmd = conn.CreateCommand();
                 cmd.Transaction = transaction;
                 cmd.CommandText = @"
-                    INSERT INTO SetupTasks (Id, Name, Type, Method, PackageId, FallbackUrl, TweakScript, Category, SubCategory, Description, Icon, IsSelected, RetryMax)
-                    VALUES (@id, @name, @type, @method, @packageId, @fallbackUrl, @tweakScript, @category, @subCategory, @description, @icon, @isSelected, @retryMax)
+                    INSERT INTO SetupTasks (Id, Name, Type, Method, PackageId, FallbackUrl, TweakScript, Category, SubCategory, Description, Icon, Status, IsSelected, RetryMax, RequiresExplorerRestart)
+                    VALUES (@id, @name, @type, @method, @packageId, @fallbackUrl, @tweakScript, @category, @subCategory, @description, @icon, @status, @isSelected, @retryMax, @requiresExplorerRestart)
                     ON CONFLICT(Id) DO UPDATE SET
                         Type = excluded.Type,
                         Method = excluded.Method,
@@ -97,7 +111,9 @@ public class DataService
                         Category = excluded.Category,
                         SubCategory = excluded.SubCategory,
                         Description = excluded.Description,
-                        Icon = excluded.Icon;";
+                        Status = excluded.Status,
+                        Icon = excluded.Icon,
+                        RequiresExplorerRestart = excluded.RequiresExplorerRestart;";
                 
                 cmd.Parameters.AddWithValue("@id", task.Id);
                 cmd.Parameters.AddWithValue("@name", task.Name);
@@ -110,16 +126,18 @@ public class DataService
                 cmd.Parameters.AddWithValue("@subCategory", task.SubCategory);
                 cmd.Parameters.AddWithValue("@description", task.Description);
                 cmd.Parameters.AddWithValue("@icon", task.Icon);
+                cmd.Parameters.AddWithValue("@status", task.Status.ToString());
                 cmd.Parameters.AddWithValue("@isSelected", task.IsSelected ? 1 : 0);
                 cmd.Parameters.AddWithValue("@retryMax", task.RetryMax);
+                cmd.Parameters.AddWithValue("@requiresExplorerRestart", task.RequiresExplorerRestart ? 1 : 0);
                 cmd.ExecuteNonQuery();
             }
 
-            // Cleanup removed tasks
+            // Cleanup removed tasks using IDs (not names) to ensure old random GUIDs are purged
             using var cleanupCmd = conn.CreateCommand();
             cleanupCmd.Transaction = transaction;
-            var masterNames = string.Join(",", masterTasks.Select(t => $"'{t.Name.Replace("'", "''")}'"));
-            cleanupCmd.CommandText = $"DELETE FROM SetupTasks WHERE Name NOT IN ({masterNames})";
+            var masterIds = string.Join(",", masterTasks.Select(t => $"'{t.Id}'"));
+            cleanupCmd.CommandText = $"DELETE FROM SetupTasks WHERE Id NOT IN ({masterIds})";
             cleanupCmd.ExecuteNonQuery();
 
             transaction.Commit();
@@ -151,8 +169,10 @@ public class DataService
                 SubCategory = reader.IsDBNull(8) ? "Misc" : reader.GetString(8),
                 Description = reader.IsDBNull(9) ? "" : reader.GetString(9),
                 Icon = reader.IsDBNull(10) ? "" : reader.GetString(10),
-                IsSelected = !reader.IsDBNull(11) && reader.GetInt32(11) == 1,
-                RetryMax = reader.IsDBNull(12) ? 3 : reader.GetInt32(12)
+                Status = reader.IsDBNull(11) ? TaskStatus.Queued : Enum.Parse<TaskStatus>(reader.GetString(11)),
+                IsSelected = !reader.IsDBNull(12) && reader.GetInt32(12) == 1,
+                RetryMax = reader.IsDBNull(13) ? 3 : reader.GetInt32(13),
+                RequiresExplorerRestart = !reader.IsDBNull(14) && reader.GetInt32(14) == 1
             });
         }
         return tasks;
@@ -198,5 +218,24 @@ public class DataService
         using var conn = new SqliteConnection($"Data Source={_dbPath}");
         conn.Open();
         SeedFromMasterCode(conn);
+    }
+
+    public List<string> GetInstalledTaskNames()
+    {
+        var installed = new List<string>();
+        try
+        {
+            using var conn = new SqliteConnection($"Data Source={_dbPath}");
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT DISTINCT TaskName FROM InstallationHistory WHERE Status = 'Success'";
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                installed.Add(reader.GetString(0));
+            }
+        }
+        catch { /* best effort */ }
+        return installed;
     }
 }
