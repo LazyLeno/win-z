@@ -1,59 +1,61 @@
 using System;
 using System.Diagnostics;
-using WinZ.Models;
-using WinZ.Services;
 using System.Threading;
 using System.Threading.Tasks;
+using WinZ.Models;
+using WinZ.Services;
 
 namespace WinZ.Engine;
 
+/// <summary>
+/// Lean Debloat Engine that uses external shells to maintain a low RAM footprint.
+/// </summary>
 public class DebloatEngine(LogService log)
 {
-    public async Task<bool> RemoveAsync(SetupTask task, bool force, CancellationToken ct)
+    public async Task<bool> ApplyAsync(SetupTask task, bool force, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(task);
         
-        if (string.IsNullOrEmpty(task.PackageId))
+        if (string.IsNullOrWhiteSpace(task.PackageId))
         {
-            log.Error(string.Format("No PackageId for: {0}", task.Name));
+            log.Error($"No PackageId defined for debloat: {task.Name}");
             return false;
         }
 
-        var script = force
-            ? string.Format("Get-AppxPackage -AllUsers *{0}* | Remove-AppxPackage -AllUsers; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*{0}*' | Remove-AppxProvisionedPackage -Online", task.PackageId)
-            : string.Format("Get-AppxPackage *{0}* | Remove-AppxPackage", task.PackageId);
+        log.Cmd($"Removing Appx: {task.PackageId}");
+        
+        // Use external powershell to avoid loading the SDK into our memory space
+        return await Task.Run(() => RunPowerShellDebloat(task.PackageId), ct);
+    }
 
-        log.Cmd(script);
-
+    private bool RunPowerShellDebloat(string packageId)
+    {
+        string script = $"Get-AppxPackage -Name '{packageId}' -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue";
+        
         var psi = new ProcessStartInfo
         {
             FileName = "powershell.exe",
-            Arguments = string.Format("-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{0}\"", script.Replace("\"", "\\\"")),
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{script}\"",
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            RedirectStandardError = true
         };
 
-        using var p = new Process { StartInfo = psi };
-        p.OutputDataReceived += (_, e) => { if (e.Data is not null) log.Info(e.Data); };
-        p.ErrorDataReceived  += (_, e) => { if (e.Data is not null) log.Error(e.Data); };
-        
-        if (!p.Start()) return false;
-        
-        p.BeginOutputReadLine(); 
-        p.BeginErrorReadLine();
-        
-        await p.WaitForExitAsync(ct);
+        using var p = Process.Start(psi);
+        if (p == null) return false;
 
-        if (p.ExitCode == 0) 
-        { 
-            log.Ok(string.Format("Removed: {0}", task.Name)); 
-            return true; 
+        string error = p.StandardError.ReadToEnd();
+        p.WaitForExit();
+
+        if (p.ExitCode == 0)
+        {
+            log.Ok($"Removed: {packageId}");
+            return true;
         }
-        
-        log.Error(string.Format("Removal failed: {0} (exit {1})", task.Name, p.ExitCode));
-        return false;
+        else
+        {
+            log.Error($"Failed to remove {packageId}: {error}");
+            return false;
+        }
     }
 }
-

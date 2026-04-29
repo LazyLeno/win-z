@@ -13,6 +13,7 @@ public class InstallEngine
 {
     private readonly LogService _log;
     private readonly WingetInstaller _winget;
+    private readonly ScoopInstaller  _scoop;
     private readonly DirectDownloadInstaller _direct;
     private readonly TweakEngine _tweaks;
     private readonly DebloatEngine _debloat;
@@ -25,6 +26,7 @@ public class InstallEngine
     {
         _log = log;
         _winget  = new WingetInstaller(log);
+        _scoop   = new ScoopInstaller(log);
         _direct  = new DirectDownloadInstaller(log);
         _tweaks  = new TweakEngine(log);
         _debloat = new DebloatEngine(log);
@@ -50,36 +52,38 @@ public class InstallEngine
 
         var results = new List<SetupResult>();
         bool wingetAvailable = await WingetInstaller.IsAvailableAsync();
+        bool scoopAvailable  = await ScoopInstaller.IsAvailableAsync();
 
         if (!wingetAvailable)
-            _log.Error("winget not found — install tasks will fall back to direct download");
+            _log.Error("winget not found — install tasks will fall back to alternatives");
+        
+        if (!scoopAvailable && tasks.Any(t => t.IsSelected && t.Method == InstallMethod.Scoop))
+            _log.Error("Scoop not found — tasks requiring Scoop will fail or fall back");
 
         foreach (var task in tasks.Where(t => t.IsSelected))
         {
             if (ct.IsCancellationRequested) break;
-            var result = await RunTaskWithHandlingAsync(task, forceDebloat, wingetAvailable, ct);
+            var result = await RunTaskWithHandlingAsync(task, forceDebloat, wingetAvailable, scoopAvailable, ct);
             if (result != null) results.Add(result);
         }
 
         return results;
     }
 
-    private async Task<SetupResult?> RunTaskWithHandlingAsync(SetupTask task, bool forceDebloat, bool wingetAvailable, CancellationToken ct)
+    private async Task<SetupResult?> RunTaskWithHandlingAsync(SetupTask task, bool forceDebloat, bool wingetAvailable, bool scoopAvailable, CancellationToken ct)
     {
         task.Status = TaskStatus.Running;
-        task.StatusText = "Running...";
         TaskStarted?.Invoke(this, task);
         _log.Info(string.Format("--- BEGIN: {0} ---", task.Name));
 
         bool ok = false;
         try
         {
-            ok = await ExecuteTaskAsync(task, forceDebloat, wingetAvailable, ct);
+            ok = await ExecuteTaskAsync(task, forceDebloat, wingetAvailable, scoopAvailable, ct);
         }
         catch (OperationCanceledException)
         {
             task.Status = TaskStatus.Skipped;
-            task.StatusText = "Cancelled";
             return new SetupResult(task.Name, TaskStatus.Skipped, "User cancelled");
         }
         catch (Exception ex)
@@ -89,7 +93,6 @@ public class InstallEngine
         }
 
         task.Status = ok ? TaskStatus.Success : TaskStatus.Failed;
-        task.StatusText = ok ? "Done" : "Failed — check log";
         TaskCompleted?.Invoke(this, (task, ok));
         
         var result = new SetupResult(task.Name, task.Status, ok ? null : string.Format("See log at {0}", _log.LogPath));
@@ -98,22 +101,26 @@ public class InstallEngine
         return result;
     }
 
-    private async Task<bool> ExecuteTaskAsync(SetupTask task, bool forceDebloat, bool wingetAvailable, CancellationToken ct)
+    private async Task<bool> ExecuteTaskAsync(SetupTask task, bool forceDebloat, bool wingetAvailable, bool scoopAvailable, CancellationToken ct)
     {
         return task.Type switch
         {
-            TaskType.Install => await RunInstallAsync(task, wingetAvailable, ct),
+            TaskType.Install => await RunInstallAsync(task, wingetAvailable, scoopAvailable, ct),
             TaskType.Tweak   => await _retry.ExecuteAsync(t => _tweaks.ApplyAsync(task, t), task.Name ?? "", task.RetryMax, ct),
-            TaskType.Remove  => await _retry.ExecuteAsync(t => _debloat.RemoveAsync(task, forceDebloat, t), task.Name ?? "", task.RetryMax, ct),
+            TaskType.Remove  => await _retry.ExecuteAsync(t => _debloat.ApplyAsync(task, forceDebloat, t), task.Name ?? "", task.RetryMax, ct),
             _ => false
         };
     }
 
-    private async Task<bool> RunInstallAsync(SetupTask task, bool wingetAvailable, CancellationToken ct)
+    private async Task<bool> RunInstallAsync(SetupTask task, bool wingetAvailable, bool scoopAvailable, CancellationToken ct)
     {
         if (task.Method == InstallMethod.Winget && wingetAvailable)
             return await _retry.ExecuteAsync(
                 t => _winget.InstallAsync(task, t), task.Name ?? "", task.RetryMax, ct);
+
+        if (task.Method == InstallMethod.Scoop && scoopAvailable)
+            return await _retry.ExecuteAsync(
+                t => _scoop.InstallAsync(task, t), task.Name ?? "", task.RetryMax, ct);
 
         if (task.FallbackUrl != null)
         {

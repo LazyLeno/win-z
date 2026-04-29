@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,18 +10,24 @@ namespace WinZ.Views;
 public partial class AdvancedPage : Page
 {
     private readonly AdvancedViewModel _vm;
+    private readonly DataService _dataService;
 
-    public AdvancedPage(AdvancedViewModel vm)
+    public AdvancedPage(AdvancedViewModel vm, DataService dataService)
     {
         InitializeComponent();
         _vm = vm;
+        _dataService = dataService;
         DataContext = _vm;
-        _vm.PropertyChanged += (_, _) => UpdateCount();
+        WeakEventManager<AdvancedViewModel, PropertyChangedEventArgs>.AddHandler(_vm, nameof(_vm.PropertyChanged), OnVmPropertyChanged);
         UpdateCount();
     }
 
+    private void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        => UpdateCount();
+
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
+        DataContext = null;
         MemoryService.Optimize();
     }
 
@@ -42,8 +49,8 @@ public partial class AdvancedPage : Page
         var selected = _vm.SelectedTasks.ToList();
         if (selected.Count == 0) return;
 
-        var log = new LogService();
-        var vm  = new RunningViewModel(selected, log);
+        using var log = new LogService();
+        var vm  = new RunningViewModel(selected, log, _dataService);
         MemoryService.Optimize();
         NavigationService.Navigate(new RunningPage(vm));
         await vm.RunAsync();

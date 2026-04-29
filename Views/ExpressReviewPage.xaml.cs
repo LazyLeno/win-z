@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.ComponentModel;
 using System.Windows.Media;
 using WinZ.Models;
 using WinZ.Services;
@@ -14,23 +15,41 @@ namespace WinZ.Views;
 public partial class ExpressReviewPage : Page
 {
     private readonly List<SetupTask> _tasks;
+    private readonly DataService _dataService;
 
-    public ExpressReviewPage(List<SetupTask> tasks)
+    public ExpressReviewPage(List<SetupTask> tasks, DataService dataService)
     {
         InitializeComponent();
         _tasks = tasks ?? new();
+        _dataService = dataService;
         
         var grouped = _tasks.GroupBy(t => t.SubCategory ?? "Other")
                            .Select(g => new TaskGroup(g.Key, g.ToList()))
                            .ToList();
 
-        DataContext = new { 
-            Col1 = grouped.Where((_, i) => i % 3 == 0),
-            Col2 = grouped.Where((_, i) => i % 3 == 1),
-            Col3 = grouped.Where((_, i) => i % 3 == 2)
+        foreach (var task in _tasks)
+        {
+            WeakEventManager<SetupTask, PropertyChangedEventArgs>.AddHandler(task, nameof(SetupTask.PropertyChanged), OnTaskPropertyChanged);
+        }
+
+        // Use concrete Lists — NOT IEnumerable iterators — to stop allocation loops during WPF layout passes
+        DataContext = new
+        {
+            Col1 = grouped.Where((_, i) => i % 3 == 0).ToList(),
+            Col2 = grouped.Where((_, i) => i % 3 == 1).ToList(),
+            Col3 = grouped.Where((_, i) => i % 3 == 2).ToList()
         };
-        
+
         UpdateCount();
+    }
+
+    private void OnTaskPropertyChanged(object? s, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SetupTask.IsSelected) && s is SetupTask t)
+        {
+            _dataService.SaveTaskSelection(t);
+            UpdateCount();
+        }
     }
 
     private void Page_Unloaded(object sender, RoutedEventArgs e)
@@ -57,8 +76,8 @@ public partial class ExpressReviewPage : Page
         var selected = _tasks.Where(t => t.IsSelected).ToList();
         if (selected.Count == 0) return;
 
-        var log = new LogService();
-        var vm  = new RunningViewModel(selected, log);
+        using var log = new LogService();
+        var vm  = new RunningViewModel(selected, log, _dataService);
         NavigationService?.Navigate(new RunningPage(vm));
         await vm.RunAsync();
     }

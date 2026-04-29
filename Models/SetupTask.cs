@@ -6,46 +6,27 @@ namespace WinZ.Models;
 
 public enum TaskType   { Install, Tweak, Remove }
 public enum TaskStatus { Queued, Running, Success, Failed, Skipped }
-public enum InstallMethod { Winget, DirectDownload }
+public enum InstallMethod { Winget, DirectDownload, Scoop }
 
 public class SetupTask : INotifyPropertyChanged
 {
-    public string Id          { get; init; } = Guid.NewGuid().ToString();
-    public string Name        { get; init; } = "";
-    public TaskType Type      { get; init; }
-    public InstallMethod? Method { get; init; }
-    public string? PackageId   { get; init; }
-    public Uri? FallbackUrl    { get; init; }
-    public string? TweakScript { get; init; }
-    public string Category    { get; init; } = "General";
-    public string SubCategory { get; init; } = "Misc";
-    public string Icon        { get; init; } = "";
-    public Uri? IconUrl       { get; init; }
+    public string Id          { get; set; } = Guid.NewGuid().ToString();
+    public string Name        { get; set; } = "";
+    public TaskType Type      { get; set; }
+    public InstallMethod? Method { get; set; }
+    public string? PackageId   { get; set; }
+    public Uri? FallbackUrl    { get; set; }
+    public string? TweakScript { get; set; }
+    public string Category    { get; set; } = "General";
+    public string SubCategory { get; set; } = "Misc";
 
-    public bool HasIcon => !string.IsNullOrWhiteSpace(Icon) || IconUrl != null;
+    /// <summary>Placeholder for future icon keys (e.g. emoji or resource key)</summary>
+    public string Icon        { get; set; } = "";
 
-    private System.Windows.Media.ImageSource? _iconImage;
-    public System.Windows.Media.ImageSource? IconImage
-    {
-        get
-        {
-            if (_iconImage == null && IconUrl != null)
-            {
-                // Trigger lazy load
-                _iconImage = Services.AsyncImageLoader.GetImage(IconUrl.ToString(), img => {
-                    _iconImage = img;
-                    OnPropertyChanged();
-                });
-            }
-            return _iconImage;
-        }
-    }
+    public string Description { get; set; } = "";
+    public int RetryMax       { get; set; } = 3;
 
-
-    public string Description { get; init; } = "";
-    public int RetryMax       { get; init; } = 3;
-
-    private bool _isSelected = false;
+    private bool _isSelected;
     public bool IsSelected
     {
         get => _isSelected;
@@ -56,21 +37,13 @@ public class SetupTask : INotifyPropertyChanged
     public TaskStatus Status
     {
         get => _status;
-        set 
-        { 
-            _status = value; 
-            OnPropertyChanged(); 
-            OnPropertyChanged(nameof(StatusText)); 
-            OnPropertyChanged(nameof(IsRunning)); 
-            OnPropertyChanged(nameof(IsDone)); 
+        set
+        {
+            _status = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsRunning));
+            OnPropertyChanged(nameof(IsDone));
         }
-    }
-
-    private string _statusText = "Queued";
-    public string StatusText
-    {
-        get => _statusText;
-        set { _statusText = value; OnPropertyChanged(); }
     }
 
     public bool IsRunning => Status == TaskStatus.Running;
@@ -80,4 +53,3 @@ public class SetupTask : INotifyPropertyChanged
     protected virtual void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
-

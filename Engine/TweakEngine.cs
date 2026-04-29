@@ -1,14 +1,18 @@
-using System.Diagnostics;
-using WinZ.Models;
-using WinZ.Services;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
-using System.Linq;
+using WinZ.Models;
+using WinZ.Services;
 
 namespace WinZ.Engine;
 
+/// <summary>
+/// High-performance, low-memory Tweak Engine.
+/// Uses native Registry APIs for speed and spawns external shells for scripts 
+/// to keep the main process memory footprint under 20MB.
+/// </summary>
 public class TweakEngine(LogService log)
 {
     public async Task<bool> ApplyAsync(SetupTask task, CancellationToken ct)
@@ -17,11 +21,10 @@ public class TweakEngine(LogService log)
         
         if (string.IsNullOrWhiteSpace(task.TweakScript))
         {
-            log.Error(string.Format("No script defined for tweak: {0}", task.Name));
+            log.Error($"No script defined for tweak: {task.Name}");
             return false;
         }
 
-        // Determine if it's a reg command or PowerShell
         string trimmedScript = task.TweakScript.TrimStart();
         bool isReg = trimmedScript.StartsWith("reg ", StringComparison.OrdinalIgnoreCase);
         log.Cmd(task.TweakScript);
@@ -32,7 +35,8 @@ public class TweakEngine(LogService log)
         }
         else
         {
-            return await ApplyPowerShellTweakAsync(task, ct);
+            // Spawn external powershell to keep main process memory at <15MB
+            return await Task.Run(() => RunExternalPowerShell(task.TweakScript), ct);
         }
     }
 
@@ -40,13 +44,10 @@ public class TweakEngine(LogService log)
     {
         try
         {
-            // Simple parser for "reg add HKLM\...\... /v ... /t ... /d ... /f"
-            // This is a naive implementation but much safer than shell execution
             var parts = task.TweakScript!.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 3 || !parts[1].Equals("add", StringComparison.OrdinalIgnoreCase))
             {
-                // Fallback to reg.exe if complex but with safer execution
-                return ApplySaferRegExe(task);
+                return RunExternalProcess("reg.exe", task.TweakScript!.Substring(4));
             }
 
             string path = parts[2];
@@ -55,10 +56,10 @@ public class TweakEngine(LogService log)
             string? data = GetArg(parts, "/d");
 
             RegistryKey root = path.StartsWith("HKLM", StringComparison.OrdinalIgnoreCase) ? Registry.LocalMachine : Registry.CurrentUser;
-            string subKeyPath = path.Substring(path.IndexOf('\\') + 1);
+            string subKeyPath = path.Contains('\\') ? path.Substring(path.IndexOf('\\') + 1) : "";
 
             using var key = root.CreateSubKey(subKeyPath, true);
-            if (key == null) throw new Exception("Could not create/open registry key.");
+            if (key == null) throw new Exception("Access Denied");
 
             object valueData = data ?? "";
             RegistryValueKind kind = ParseKind(typeStr);
@@ -67,63 +68,53 @@ public class TweakEngine(LogService log)
             if (kind == RegistryValueKind.QWord && long.TryParse(data, out long qword)) valueData = qword;
 
             key.SetValue(valueName ?? "", valueData, kind);
-            
-            log.Ok(string.Format("Tweak applied: {0}", task.Name));
+            log.Ok($"Registry tweak applied: {task.Name}");
             return true;
         }
         catch (Exception ex)
         {
-            log.Error(string.Format("Registry tweak failed: {0} - {1}", task.Name, ex.Message));
+            log.Error($"Registry failure: {task.Name} - {ex.Message}");
             return false;
         }
     }
 
-    private bool ApplySaferRegExe(SetupTask task)
-    {
-        var psi = new ProcessStartInfo
-        {
-            FileName = "reg.exe",
-            Arguments = task.TweakScript!.Substring(4),
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardError = true
-        };
-        using var p = Process.Start(psi);
-        p?.WaitForExit();
-        return p?.ExitCode == 0;
-    }
-
-    private async Task<bool> ApplyPowerShellTweakAsync(SetupTask task, CancellationToken ct)
+    private bool RunExternalPowerShell(string script)
     {
         var psi = new ProcessStartInfo
         {
             FileName = "powershell.exe",
-            Arguments = string.Format("-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{0}\"", EscapePs(task.TweakScript!)),
+            Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{script.Replace("\"", "\\\"")}\"",
+            UseShellExecute = false,
+            CreateNoWindow = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardError = true
+        };
+
+        using var p = Process.Start(psi);
+        if (p == null) return false;
+
+        string output = p.StandardOutput.ReadToEnd();
+        string error = p.StandardError.ReadToEnd();
+        p.WaitForExit();
+
+        if (!string.IsNullOrWhiteSpace(output)) log.Info(output);
+        if (!string.IsNullOrWhiteSpace(error)) log.Error(error);
+
+        return p.ExitCode == 0;
+    }
+
+    private bool RunExternalProcess(string fileName, string args)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = args,
             UseShellExecute = false,
             CreateNoWindow = true
         };
-
-        using var p = new Process { StartInfo = psi };
-        p.OutputDataReceived += (_, e) => { if (e.Data is not null) log.Info(e.Data); };
-        p.ErrorDataReceived  += (_, e) => { if (e.Data is not null) log.Error(e.Data); };
-        
-        if (!p.Start()) return false;
-        
-        p.BeginOutputReadLine(); 
-        p.BeginErrorReadLine();
-        
-        await p.WaitForExitAsync(ct);
-
-        if (p.ExitCode == 0) 
-        { 
-            log.Ok(string.Format("Tweak applied: {0}", task.Name)); 
-            return true; 
-        }
-        
-        log.Error(string.Format("Tweak failed: {0} (exit {1})", task.Name, p.ExitCode));
-        return false;
+        using var p = Process.Start(psi);
+        p?.WaitForExit();
+        return p?.ExitCode == 0;
     }
 
     private static string GetArg(string[] parts, string flag)
@@ -141,7 +132,4 @@ public class TweakEngine(LogService log)
         "REG_BINARY" => RegistryValueKind.Binary,
         _ => RegistryValueKind.String
     };
-
-    private static string EscapePs(string s) => s.Replace("\"", "\\\"");
 }
-

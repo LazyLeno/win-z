@@ -15,6 +15,8 @@ public partial class RunningPage : Page
 
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
+        _vm.Dispose();      // Detach all engine + log event handlers
+        DataContext = null;
         MemoryService.Optimize();
     }
 

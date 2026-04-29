@@ -1,0 +1,18 @@
+{
+    "version": "6.42.11",
+    "description": "Internet Download Manager (Pro Pre-installed)",
+    "homepage": "https://www.internetdownloadmanager.com/",
+    "url": "https://your-hosting-site.com/IDM_Setup_Custom.exe",
+    "hash": "24EBF7E981CC961749FBB72E03DB8798E2A25675207469C910AC27AD338B942D",
+    "installer": {
+        "args": [
+            "/SILENT"
+        ]
+    },
+    "uninstaller": {
+        "args": [
+            "/UNINSTALL"
+        ]
+    },
+    "notes": "Made specifically for WinZ"
+}

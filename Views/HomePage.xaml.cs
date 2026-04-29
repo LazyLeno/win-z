@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Threading.Tasks;
 using WinZ.ViewModels;
 using WinZ.Services;
 
@@ -9,20 +10,36 @@ namespace WinZ.Views;
 
 public partial class HomePage : Page
 {
-    private readonly DataService _dataService = new();
+    private static DataService? _sharedService;
+    private static readonly object _lock = new();
+
+    private DataService GetDataService()
+    {
+        if (_sharedService == null)
+        {
+            lock (_lock)
+            {
+                _sharedService ??= new DataService();
+            }
+        }
+        return _sharedService;
+    }
 
     public HomePage()
     {
         InitializeComponent();
         MemoryService.Optimize();
+        
+        // Start DB init in background so it's ready when clicks happen
+        Task.Run(() => GetDataService());
     }
 
     private void Express_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            var tasks = _dataService.LoadTasks();
-            NavigationService?.Navigate(new ExpressReviewPage(tasks));
+            var tasks = GetDataService().LoadTasks();
+            NavigationService?.Navigate(new ExpressReviewPage(tasks, GetDataService()));
         }
         catch (Exception ex)
         {
@@ -35,10 +52,11 @@ public partial class HomePage : Page
     {
         try
         {
-            var tasks = _dataService.LoadTasks();
+            var tasks = GetDataService().LoadTasks();
+            var ds = GetDataService();
             var vm = new AdvancedViewModel();
-            vm.Load(tasks);
-            NavigationService?.Navigate(new AdvancedPage(vm));
+            vm.Load(tasks, ds);
+            NavigationService?.Navigate(new AdvancedPage(vm, ds));
         }
         catch (Exception ex)
         {
@@ -54,7 +72,7 @@ public partial class HomePage : Page
             if (MessageBox.Show("This will reset the database to factory defaults. Continue?", "WinZ – Reset", 
                 MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                _dataService.ForceSyncFromCode();
+                GetDataService().ForceSyncFromCode();
                 MessageBox.Show("Database successfully reset to master seed.", "WinZ – Reset Success");
             }
         }
@@ -72,7 +90,7 @@ public partial class HomePage : Page
     {
         try
         {
-            _dataService.ExportToJson("winz_config_export.json");
+            GetDataService().ExportToJson("winz_config_export.json");
             MessageBox.Show("Config exported to winz_config_export.json", "WinZ – Export Success");
         }
         catch (IOException ex)

@@ -8,5 +8,5 @@
         Background="#1E1E1E"
         FontFamily="Segoe UI" FontSize="13">
 
-    <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden"/>
+    <Frame x:Name="MainFrame" Source="Views/HomePage.xaml" NavigationUIVisibility="Hidden"/>
 </Window>

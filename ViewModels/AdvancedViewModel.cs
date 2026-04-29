@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using WinZ.Models;
 using WinZ.Services;
 using System;
+using System.Windows;
 
 namespace WinZ.ViewModels;
 
@@ -26,15 +27,16 @@ public class AdvancedViewModel : INotifyPropertyChanged
     public int SelectedCount =>
         Tabs.SelectMany(t => t.SubGroups).SelectMany(g => g.Tasks).Count(task => task.IsSelected);
 
-    public void Load(IEnumerable<SetupTask>? allTasks)
+    private DataService? _dataService;
+
+    public void Load(IEnumerable<SetupTask>? allTasks, DataService dataService)
     {
         if (allTasks == null) return;
+        _dataService = dataService;
         
         Tabs.Clear();
 
-        // Advanced mode should start with a clean slate (nothing pre-checked)
         var tasksList = allTasks.ToList();
-        foreach (var t in tasksList) t.IsSelected = false;
 
         var groupedByCategory = tasksList
             .GroupBy(t => t.Category)
@@ -50,9 +52,24 @@ public class AdvancedViewModel : INotifyPropertyChanged
             foreach (var sub in subGrouped)
             {
                 var sg = new TaskGroup(sub.Key ?? "Other", sub.ToList());
-                sg.SelectionChanged += (_, _) => OnPropertyChanged(nameof(SelectedCount));
+                
+                WeakEventManager<TaskGroup, EventArgs>.AddHandler(sg, nameof(TaskGroup.SelectionChanged), (s, e) => {
+                    OnPropertyChanged(nameof(SelectedCount));
+                });
+                
+                foreach (var task in sg.Tasks)
+                {
+                    WeakEventManager<SetupTask, PropertyChangedEventArgs>.AddHandler(task, nameof(SetupTask.PropertyChanged), (s, e) => {
+                        if (e.PropertyName == nameof(SetupTask.IsSelected) && s is SetupTask t)
+                        {
+                            _dataService?.SaveTaskSelection(t);
+                        }
+                    });
+                }
+
                 tab.SubGroups.Add(sg);
             }
+            tab.RefreshColumns(); // Stabilize columns
             Tabs.Add(tab);
         }
 
@@ -60,7 +77,6 @@ public class AdvancedViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedCount));
         MemoryService.Optimize();
     }
-
 
     private static int CategoryOrder(string cat) => cat switch
     {
@@ -85,23 +101,29 @@ public class CategoryTab : INotifyPropertyChanged
     public string Name { get; }
     public ObservableCollection<TaskGroup> SubGroups { get; } = new();
 
-    public IEnumerable<TaskGroup> AllGroups => SubGroups;
+    // Use concrete Lists instead of IEnumerables to prevent iterator allocation during UI polling
+    private List<TaskGroup> _col1 = new();
+    private List<TaskGroup> _col2 = new();
+    private List<TaskGroup> _col3 = new();
 
-
-    // Split sub-groups into 3 columns for stable masonry-like stacking
-    public IEnumerable<TaskGroup> Column1 => SubGroups.Where((_, i) => i >= 0 && i % 3 == 0);
-    public IEnumerable<TaskGroup> Column2 => SubGroups.Where((_, i) => i >= 0 && i % 3 == 1);
-    public IEnumerable<TaskGroup> Column3 => SubGroups.Where((_, i) => i >= 0 && i % 3 == 2);
+    public List<TaskGroup> Column1 => _col1;
+    public List<TaskGroup> Column2 => _col2;
+    public List<TaskGroup> Column3 => _col3;
 
     public CategoryTab(string name)
     {
         Name = name;
-        SubGroups.CollectionChanged += (_, _) =>
-        {
-            OnPropertyChanged(nameof(Column1));
-            OnPropertyChanged(nameof(Column2));
-            OnPropertyChanged(nameof(Column3));
-        };
+        SubGroups.CollectionChanged += (_, _) => RefreshColumns();
+    }
+
+    public void RefreshColumns()
+    {
+        _col1 = SubGroups.Where((_, i) => i % 3 == 0).ToList();
+        _col2 = SubGroups.Where((_, i) => i % 3 == 1).ToList();
+        _col3 = SubGroups.Where((_, i) => i % 3 == 2).ToList();
+        OnPropertyChanged(nameof(Column1));
+        OnPropertyChanged(nameof(Column2));
+        OnPropertyChanged(nameof(Column3));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -142,18 +164,18 @@ public class TaskGroup : INotifyPropertyChanged
         ToggleExpandCommand = new RelayCommand(() => IsExpanded = !IsExpanded);
         Tasks = new ObservableCollection<SetupTask>(tasks ?? new());
         foreach (var t in Tasks)
-            t.PropertyChanged += (_, e) =>
-            {
+        {
+            WeakEventManager<SetupTask, PropertyChangedEventArgs>.AddHandler(t, nameof(SetupTask.PropertyChanged), (s, e) => {
                 if (e.PropertyName == nameof(SetupTask.IsSelected))
                 {
                     OnPropertyChanged(nameof(AllSelected));
                     SelectionChanged?.Invoke(this, EventArgs.Empty);
                 }
-            };
+            });
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     protected virtual void OnPropertyChanged([CallerMemberName] string? n = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }
-

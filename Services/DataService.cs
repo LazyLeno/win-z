@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Data.Sqlite;
-using Newtonsoft.Json;
+using System.Text.Json;
 using WinZ.Models;
 using WinZ.Engine;
 
@@ -12,204 +12,191 @@ namespace WinZ.Services;
 public class DataService
 {
     private readonly string _dbPath;
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     public DataService()
     {
         var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinZ");
         Directory.CreateDirectory(appData);
-        _dbPath = Path.Combine(appData, "winz_vault.db");
+        _dbPath = Path.Combine(appData, "winz_vault_v10.db");
 
         InitializeDatabase();
     }
 
     private void InitializeDatabase()
     {
-        using var connection = new SqliteConnection(string.Format("Data Source={0}", _dbPath));
-        connection.Open();
+        using var conn = new SqliteConnection($"Data Source={_dbPath}");
+        conn.Open();
 
-        using var transaction = connection.BeginTransaction();
-        try
-        {
-            CreateTables(connection, transaction);
-
-            // Version check
-            int currentDbVersion = GetStoredVersion(connection, transaction);
-            if (currentDbVersion < MasterSeed.SeedVersion)
-            {
-                SeedFromMasterCode(connection, transaction);
-                UpdateStoredVersion(connection, transaction, MasterSeed.SeedVersion);
-            }
-
-            transaction.Commit();
-        }
-        catch (Exception)
-        {
-            transaction.Rollback();
-            throw;
-        }
-    }
-
-    private static void CreateTables(SqliteConnection conn, SqliteTransaction trans)
-    {
-        using var command = conn.CreateCommand();
-        command.Transaction = trans;
-        command.CommandText = @"
+        // Create tables using raw SQL for maximum control and minimum overhead
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            PRAGMA journal_mode=WAL;
             CREATE TABLE IF NOT EXISTS SetupTasks (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Name TEXT NOT NULL,
-                Type TEXT NOT NULL,
+                Id TEXT PRIMARY KEY,
+                Name TEXT,
+                Type TEXT,
                 Method TEXT,
                 PackageId TEXT,
+                FallbackUrl TEXT,
+                TweakScript TEXT,
                 Category TEXT,
                 SubCategory TEXT,
-                Icon TEXT,
-                IconUrl TEXT,
                 Description TEXT,
-                TweakScript TEXT,
-                FallbackUrl TEXT,
-                IsSelected INTEGER DEFAULT 0
+                Icon TEXT,
+                IsSelected INTEGER,
+                RetryMax INTEGER
             );
-
             CREATE TABLE IF NOT EXISTS InstallationHistory (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                TaskName TEXT NOT NULL,
-                Status TEXT NOT NULL,
-                Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                ErrorDetail TEXT
+                TaskName TEXT,
+                Status TEXT,
+                ErrorDetail TEXT,
+                Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             );
-
             CREATE TABLE IF NOT EXISTS AppMetadata (
                 Key TEXT PRIMARY KEY,
                 Value TEXT
-            );
-        ";
-        command.ExecuteNonQuery();
-    }
-
-    private static int GetStoredVersion(SqliteConnection conn, SqliteTransaction trans)
-    {
-        using var cmd = conn.CreateCommand();
-        cmd.Transaction = trans;
-        cmd.CommandText = "SELECT Value FROM AppMetadata WHERE Key = 'SeedVersion'";
-        var val = cmd.ExecuteScalar();
-        return val != null && int.TryParse(val.ToString(), out int res) ? res : 0;
-    }
-
-    private static void UpdateStoredVersion(SqliteConnection conn, SqliteTransaction trans, int version)
-    {
-        using var cmd = conn.CreateCommand();
-        cmd.Transaction = trans;
-        cmd.CommandText = "INSERT OR REPLACE INTO AppMetadata (Key, Value) VALUES ('SeedVersion', $v)";
-        cmd.Parameters.AddWithValue("$v", version.ToString());
+            );";
         cmd.ExecuteNonQuery();
-    }
 
-    private static void SeedFromMasterCode(SqliteConnection conn, SqliteTransaction trans)
-    {
-        using var clearCmd = conn.CreateCommand();
-        clearCmd.Transaction = trans;
-        clearCmd.CommandText = "DELETE FROM SetupTasks";
-        clearCmd.ExecuteNonQuery();
+        // Version check
+        cmd.CommandText = "SELECT Value FROM AppMetadata WHERE Key = 'SeedVersion'";
+        var versionVal = cmd.ExecuteScalar()?.ToString();
+        int currentDbVersion = int.TryParse(versionVal, out int v) ? v : 0;
 
-        var all = MasterSeed.GetDefaultTasks();
-        foreach (var t in all)
+        if (currentDbVersion < MasterSeed.SeedVersion)
         {
-            InsertTask(conn, trans, t);
+            SeedFromMasterCode(conn);
+            cmd.CommandText = "INSERT OR REPLACE INTO AppMetadata (Key, Value) VALUES ('SeedVersion', @v)";
+            cmd.Parameters.AddWithValue("@v", MasterSeed.SeedVersion.ToString());
+            cmd.ExecuteNonQuery();
         }
     }
 
-    private static void InsertTask(SqliteConnection conn, SqliteTransaction trans, SetupTask t)
+    private void SeedFromMasterCode(SqliteConnection conn)
     {
-        using var cmd = conn.CreateCommand();
-        cmd.Transaction = trans;
-        cmd.CommandText = @"
-            INSERT INTO SetupTasks (Name, Type, Method, PackageId, Category, SubCategory, Icon, IconUrl, Description, TweakScript, FallbackUrl, IsSelected)
-            VALUES ($name, $type, $method, $pid, $cat, $sub, $icon, $iconUrl, $desc, $script, $fallback, $sel)
-        ";
-        cmd.Parameters.AddWithValue("$name", t.Name ?? "");
-        cmd.Parameters.AddWithValue("$type", t.Type.ToString());
-        cmd.Parameters.AddWithValue("$method", t.Method.HasValue ? t.Method.Value.ToString() : DBNull.Value);
-        cmd.Parameters.AddWithValue("$pid", (object?)t.PackageId ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$cat", t.Category ?? "");
-        cmd.Parameters.AddWithValue("$sub", t.SubCategory ?? "");
-        cmd.Parameters.AddWithValue("$icon", t.Icon ?? "");
-        cmd.Parameters.AddWithValue("$iconUrl", (object?)t.IconUrl?.ToString() ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$desc", t.Description ?? "");
-        cmd.Parameters.AddWithValue("$script", (object?)t.TweakScript ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$fallback", (object?)t.FallbackUrl?.ToString() ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$sel", t.IsSelected ? 1 : 0);
-        cmd.ExecuteNonQuery();
+        var masterTasks = MasterSeed.GetDefaultTasks();
+        
+        using var transaction = conn.BeginTransaction();
+        try
+        {
+            foreach (var task in masterTasks)
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.CommandText = @"
+                    INSERT INTO SetupTasks (Id, Name, Type, Method, PackageId, FallbackUrl, TweakScript, Category, SubCategory, Description, Icon, IsSelected, RetryMax)
+                    VALUES (@id, @name, @type, @method, @packageId, @fallbackUrl, @tweakScript, @category, @subCategory, @description, @icon, @isSelected, @retryMax)
+                    ON CONFLICT(Id) DO UPDATE SET
+                        Type = excluded.Type,
+                        Method = excluded.Method,
+                        PackageId = excluded.PackageId,
+                        FallbackUrl = excluded.FallbackUrl,
+                        TweakScript = excluded.TweakScript,
+                        Category = excluded.Category,
+                        SubCategory = excluded.SubCategory,
+                        Description = excluded.Description,
+                        Icon = excluded.Icon;";
+                
+                cmd.Parameters.AddWithValue("@id", task.Id);
+                cmd.Parameters.AddWithValue("@name", task.Name);
+                cmd.Parameters.AddWithValue("@type", task.Type.ToString());
+                cmd.Parameters.AddWithValue("@method", task.Method?.ToString() ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@packageId", task.PackageId ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@fallbackUrl", task.FallbackUrl?.ToString() ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@tweakScript", task.TweakScript ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@category", task.Category);
+                cmd.Parameters.AddWithValue("@subCategory", task.SubCategory);
+                cmd.Parameters.AddWithValue("@description", task.Description);
+                cmd.Parameters.AddWithValue("@icon", task.Icon);
+                cmd.Parameters.AddWithValue("@isSelected", task.IsSelected ? 1 : 0);
+                cmd.Parameters.AddWithValue("@retryMax", task.RetryMax);
+                cmd.ExecuteNonQuery();
+            }
+
+            // Cleanup removed tasks
+            using var cleanupCmd = conn.CreateCommand();
+            cleanupCmd.Transaction = transaction;
+            var masterNames = string.Join(",", masterTasks.Select(t => $"'{t.Name.Replace("'", "''")}'"));
+            cleanupCmd.CommandText = $"DELETE FROM SetupTasks WHERE Name NOT IN ({masterNames})";
+            cleanupCmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch { transaction.Rollback(); throw; }
     }
 
     public List<SetupTask> LoadTasks()
     {
         var tasks = new List<SetupTask>();
-        using var connection = new SqliteConnection(string.Format("Data Source={0}", _dbPath));
-        connection.Open();
+        using var conn = new SqliteConnection($"Data Source={_dbPath}");
+        conn.Open();
 
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT Id, Name, Type, Method, PackageId, Category, SubCategory, Icon, IconUrl, Description, TweakScript, FallbackUrl, IsSelected FROM SetupTasks";
-        
-        using var reader = command.ExecuteReader();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT * FROM SetupTasks";
+        using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
             tasks.Add(new SetupTask
             {
+                Id = reader.GetString(0),
                 Name = reader.IsDBNull(1) ? "" : reader.GetString(1),
                 Type = Enum.Parse<TaskType>(reader.GetString(2)),
-                Method = reader.IsDBNull(3) ? (InstallMethod?)null : Enum.Parse<InstallMethod>(reader.GetString(3)),
+                Method = reader.IsDBNull(3) ? null : Enum.Parse<InstallMethod>(reader.GetString(3)),
                 PackageId = reader.IsDBNull(4) ? null : reader.GetString(4),
-                Category = reader.IsDBNull(5) ? "" : reader.GetString(5),
-                SubCategory = reader.IsDBNull(6) ? "" : reader.GetString(6),
-                Icon = reader.IsDBNull(7) ? "" : reader.GetString(7),
-                IconUrl = reader.IsDBNull(8) ? null : new Uri(reader.GetString(8)),
+                FallbackUrl = reader.IsDBNull(5) ? null : new Uri(reader.GetString(5)),
+                TweakScript = reader.IsDBNull(6) ? null : reader.GetString(6),
+                Category = reader.IsDBNull(7) ? "General" : reader.GetString(7),
+                SubCategory = reader.IsDBNull(8) ? "Misc" : reader.GetString(8),
                 Description = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                TweakScript = reader.IsDBNull(10) ? null : reader.GetString(10),
-                FallbackUrl = reader.IsDBNull(11) ? null : new Uri(reader.GetString(11)),
-                IsSelected = reader.GetInt32(12) == 1
+                Icon = reader.IsDBNull(10) ? "" : reader.GetString(10),
+                IsSelected = !reader.IsDBNull(11) && reader.GetInt32(11) == 1,
+                RetryMax = reader.IsDBNull(12) ? 3 : reader.GetInt32(12)
             });
         }
         return tasks;
     }
 
+    public void SaveTaskSelection(SetupTask task)
+    {
+        using var conn = new SqliteConnection($"Data Source={_dbPath}");
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE SetupTasks SET IsSelected = @sel WHERE Id = @id";
+        cmd.Parameters.AddWithValue("@sel", task.IsSelected ? 1 : 0);
+        cmd.Parameters.AddWithValue("@id", task.Id);
+        cmd.ExecuteNonQuery();
+    }
 
     public void SaveResult(SetupResult result)
     {
-        ArgumentNullException.ThrowIfNull(result);
-        
-        using var connection = new SqliteConnection(string.Format("Data Source={0}", _dbPath));
-        connection.Open();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "INSERT INTO InstallationHistory (TaskName, Status, ErrorDetail) VALUES ($n, $s, $e)";
-        cmd.Parameters.AddWithValue("$n", result.Name ?? "Unknown");
-        cmd.Parameters.AddWithValue("$s", result.Status.ToString());
-        cmd.Parameters.AddWithValue("$e", (object?)result.ErrorDetail ?? DBNull.Value);
+        using var conn = new SqliteConnection($"Data Source={_dbPath}");
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "INSERT INTO InstallationHistory (TaskName, Status, ErrorDetail) VALUES (@name, @status, @err)";
+        cmd.Parameters.AddWithValue("@name", result.Name);
+        cmd.Parameters.AddWithValue("@status", result.Status.ToString());
+        cmd.Parameters.AddWithValue("@err", result.ErrorDetail ?? (object)DBNull.Value);
         cmd.ExecuteNonQuery();
     }
 
     public void ExportToJson(string path)
     {
         if (string.IsNullOrEmpty(path)) return;
-        
         var tasks = LoadTasks();
         var config = new ExpressConfig(
             tasks.Where(t => t.Type == TaskType.Install).ToList(),
             tasks.Where(t => t.Type == TaskType.Tweak).ToList(),
             tasks.Where(t => t.Type == TaskType.Remove).ToList()
         );
-
-        var json = JsonConvert.SerializeObject(config, Formatting.Indented);
-        File.WriteAllText(path, json);
+        File.WriteAllText(path, JsonSerializer.Serialize(config, JsonOptions));
     }
 
     public void ForceSyncFromCode()
     {
-        using var connection = new SqliteConnection(string.Format("Data Source={0}", _dbPath));
-        connection.Open();
-        using var trans = connection.BeginTransaction();
-        SeedFromMasterCode(connection, trans);
-        UpdateStoredVersion(connection, trans, MasterSeed.SeedVersion);
-        trans.Commit();
+        using var conn = new SqliteConnection($"Data Source={_dbPath}");
+        conn.Open();
+        SeedFromMasterCode(conn);
     }
 }
-

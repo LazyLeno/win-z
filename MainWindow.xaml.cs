@@ -8,6 +8,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => MainFrame.Navigate(new HomePage());
+        MainFrame.Navigated += (s, e) => Services.MemoryService.Optimize();
     }
 }

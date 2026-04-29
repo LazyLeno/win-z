@@ -169,6 +169,20 @@
         </Setter>
     </Style>
 
+    <!-- ── Virtualization Hardening ───────────────────────── -->
+    <Style TargetType="ListBox">
+        <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True"/>
+        <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling"/>
+        <Setter Property="VirtualizingStackPanel.CacheLengthUnit" Value="Item"/>
+        <Setter Property="VirtualizingStackPanel.CacheLength" Value="10,10"/>
+        <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+    </Style>
+
+    <Style TargetType="ItemsControl">
+        <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True"/>
+        <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling"/>
+    </Style>
+
     <!-- ── Tooltip ──────────────────────────────────────── -->
     <Style TargetType="ToolTip">
         <Setter Property="Background" Value="#2D2D2D"/>
