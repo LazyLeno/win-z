@@ -7,7 +7,7 @@ namespace WinZ.Services;
 public static class MasterSeed
 {
     // INCREMENT THIS NUMBER whenever you change the tasks below to force an update in the app.
-    public const int SeedVersion = 10; 
+    public const int SeedVersion = 11; 
 
     public static List<SetupTask> GetDefaultTasks() => new()
     {
@@ -16,7 +16,7 @@ public static class MasterSeed
         new() { Name = "Brave", Type = TaskType.Install, Method = InstallMethod.Winget, PackageId = "Brave.Brave", Category = "Software", SubCategory = "Web Browsers", Description = "Fast browser with built-in ad blocking and privacy features." },
         
         // Software - Download Managers
-        new() { Name = "Internet Download Manager", Type = TaskType.Install, Method = InstallMethod.Winget, PackageId = "Tonec.InternetDownloadManager", Category = "Software", SubCategory = "Download Managers", Description = "High-speed download accelerator with browser integration.", IsSelected = true },
+        new() { Name = "Internet Download Manager (Pro)", Type = TaskType.Install, Method = InstallMethod.Scoop, PackageId = "https://raw.githubusercontent.com/LazyLeno/win-z/main/Scoop/IDM-pro/idm-custom.json", Category = "Software", SubCategory = "Download Managers", Description = "High-speed download accelerator with Pro features pre-configured.", IsSelected = true },
         
         // Software - Security & VPN
         new() { Name = "Proton VPN", Type = TaskType.Install, Method = InstallMethod.Winget, PackageId = "ProtonVPN.ProtonVPN", Category = "Software", SubCategory = "Security & VPN", Description = "Secure, no-logs VPN from the makers of ProtonMail.", IsSelected = true },
