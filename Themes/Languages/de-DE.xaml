@@ -1,0 +1,231 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+                    xml:space="preserve">
+    
+    <!-- Tabs -->
+    <sys:String x:Key="L.Tab.Special">Spezial</sys:String>
+    <sys:String x:Key="L.Tab.Safety">Sicherheit</sys:String>
+    <sys:String x:Key="L.Tab.General">Allgemein</sys:String>
+    <sys:String x:Key="L.Tab.Software">Anwendungen</sys:String>
+    <sys:String x:Key="L.Tab.Windows">Windows-System</sys:String>
+    <sys:String x:Key="L.Tab.Automation">Automatisierung</sys:String>
+
+    <!-- Categories / Groups -->
+    <sys:String x:Key="L.Cat.Safety &amp; Content">Sicherheit &amp; Inhalt</sys:String>
+    <sys:String x:Key="L.Cat.System Protection">Systemschutz</sys:String>
+    <sys:String x:Key="L.Cat.Execution Security">Ausführungssicherheit</sys:String>
+    <sys:String x:Key="L.Cat.Portability">Portabilität</sys:String>
+    <sys:String x:Key="L.Cat.Automation">Automatisierung</sys:String>
+    <sys:String x:Key="L.Cat.Task Automation">Aufgabenautomatisierung</sys:String>
+    <sys:String x:Key="L.Cat.Web Browsers">Webbrowser</sys:String>
+    <sys:String x:Key="L.Cat.Download Managers">Download-Manager</sys:String>
+    <sys:String x:Key="L.Cat.Security">Sicherheit</sys:String>
+    <sys:String x:Key="L.Cat.Communication">Kommunikation</sys:String>
+    <sys:String x:Key="L.Cat.Productivity">Produktivität</sys:String>
+    <sys:String x:Key="L.Cat.Music">Musik</sys:String>
+    <sys:String x:Key="L.Cat.Media">Medien</sys:String>
+    <sys:String x:Key="L.Cat.Creativity">Kreativität</sys:String>
+    <sys:String x:Key="L.Cat.Gaming">Gaming</sys:String>
+    <sys:String x:Key="L.Cat.Development">Entwicklung</sys:String>
+    <sys:String x:Key="L.Cat.Utilities">Dienstprogramme</sys:String>
+    <sys:String x:Key="L.Cat.File Managers">Dateimanager</sys:String>
+    <sys:String x:Key="L.Cat.System Tweaks">System-Optimierungen</sys:String>
+    <sys:String x:Key="L.Cat.Privacy">Datenschutz</sys:String>
+    <sys:String x:Key="L.Cat.Debloat">Entschlacken</sys:String>
+
+    <!-- Menu Bar -->
+    <sys:String x:Key="L.Menu.File">Datei</sys:String>
+    <sys:String x:Key="L.Menu.Settings">Einstellungen</sys:String>
+    <sys:String x:Key="L.Menu.Help">Hilfe</sys:String>
+    <sys:String x:Key="L.Menu.Export">Profil exportieren...</sys:String>
+    <sys:String x:Key="L.Menu.Import">Profil importieren...</sys:String>
+    <sys:String x:Key="L.Menu.Exit">Beenden</sys:String>
+    <sys:String x:Key="L.Menu.Preferences">Präferenzen...</sys:String>
+    <sys:String x:Key="L.Menu.Portable">Portabler Modus</sys:String>
+    <sys:String x:Key="L.Menu.About">Über WinZ</sys:String>
+
+    <!-- Task Names -->
+    <sys:String x:Key="L.Name.sw_librewolf">LibreWolf</sys:String>
+    <sys:String x:Key="L.Name.sw_brave">Brave</sys:String>
+    <sys:String x:Key="L.Name.sw_idm">Internet Download Manager</sys:String>
+    <sys:String x:Key="L.Name.sw_qbittorrent">qBittorrent</sys:String>
+    <sys:String x:Key="L.Name.sw_protonvpn">Proton VPN</sys:String>
+    <sys:String x:Key="L.Name.sw_simplewall">SimpleWall</sys:String>
+    <sys:String x:Key="L.Name.sw_malwarebytes">Malwarebytes</sys:String>
+    <sys:String x:Key="L.Name.sw_keepassxc">KeePassXC</sys:String>
+    <sys:String x:Key="L.Name.sw_discord">Discord</sys:String>
+    <sys:String x:Key="L.Name.sw_obsidian">Obsidian</sys:String>
+    <sys:String x:Key="L.Name.sw_pear_desktop">Pear Desktop</sys:String>
+    <sys:String x:Key="L.Name.sw_vlc">VLC Media Player</sys:String>
+    <sys:String x:Key="L.Name.sw_blender">Blender</sys:String>
+    <sys:String x:Key="L.Name.sw_obs_studio">OBS Studio</sys:String>
+    <sys:String x:Key="L.Name.sw_steam">Steam</sys:String>
+    <sys:String x:Key="L.Name.sw_epic">Epic Games Launcher</sys:String>
+    <sys:String x:Key="L.Name.sw_vscode">Visual Studio Code</sys:String>
+    <sys:String x:Key="L.Name.sw_notepadplus">Notepad++</sys:String>
+    <sys:String x:Key="L.Name.sw_sharex">ShareX</sys:String>
+    <sys:String x:Key="L.Name.sw_7zip">7-Zip</sys:String>
+    <sys:String x:Key="L.Name.sw_winrar">WinRAR</sys:String>
+    <sys:String x:Key="L.Name.sw_onecommander">OneCommander</sys:String>
+    <sys:String x:Key="L.Name.sw_directory_opus">Directory Opus</sys:String>
+    <sys:String x:Key="L.Name.tweak_verbose_login">Detaillierte Anmeldemeldungen</sys:String>
+    <sys:String x:Key="L.Name.tweak_disable_cortana">Cortana deaktivieren</sys:String>
+    <sys:String x:Key="L.Name.rem_xbox_overlay">Xbox Gaming Overlay</sys:String>
+    <sys:String x:Key="L.Name.set_allow_modded">Modifizierte Software zulassen</sys:String>
+    <sys:String x:Key="L.Name.set_prompt_restore">Immer nach Wiederherstellungspunkt fragen</sys:String>
+    <sys:String x:Key="L.Name.set_auto_cleanup">Automatische Bereinigung nach Abschluss</sys:String>
+    <sys:String x:Key="L.Name.set_auto_update">Repo-Updates im Hintergrund</sys:String>
+    <sys:String x:Key="L.Name.set_verify_checksums">Download-Prüfsummen verifizieren</sys:String>
+    <sys:String x:Key="L.Name.set_clm_mode">Isolierte PowerShell-Ausführung</sys:String>
+    <sys:String x:Key="L.Name.set_portable_mode">Portabler Modus (nur Arbeitsspeicher)</sys:String>
+
+    <!-- Task Descriptions -->
+    <sys:String x:Key="L.Desc.sw_librewolf">Privatsphäre-fokussierter Firefox-Fork mit verbesserten Sicherheitseinstellungen.</sys:String>
+    <sys:String x:Key="L.Desc.sw_brave">Schneller Browser mit integriertem Werbeblocker und Datenschutzfunktionen.</sys:String>
+    <sys:String x:Key="L.Desc.sw_idm">Hochgeschwindigkeits-Download-Beschleuniger für alle Ihre Dateien.</sys:String>
+    <sys:String x:Key="L.Desc.sw_qbittorrent">Open-Source-Alternative zu µTorrent mit erweiterten Funktionen.</sys:String>
+    <sys:String x:Key="L.Desc.sw_protonvpn">Sicheres VPN ohne Protokollierung von den Machern von ProtonMail.</sys:String>
+    <sys:String x:Key="L.Desc.sw_simplewall">Einfaches Tool zur Konfiguration der Windows Filtering Platform (WFP).</sys:String>
+    <sys:String x:Key="L.Desc.sw_malwarebytes">Fortschrittliche Cybersicherheit für Privatpersonen und Unternehmen.</sys:String>
+    <sys:String x:Key="L.Desc.sw_keepassxc">Plattformübergreifender, community-getriebener Passwortmanager.</sys:String>
+    <sys:String x:Key="L.Desc.sw_discord">Sprach-, Video- und Textkommunikation für Communities.</sys:String>
+    <sys:String x:Key="L.Desc.sw_obsidian">Leistungsstarke lokale Markdown-basierte Wissensdatenbank.</sys:String>
+    <sys:String x:Key="L.Desc.sw_pear_desktop">Funktionsreicher YouTube Music Desktop-Client.</sys:String>
+    <sys:String x:Key="L.Desc.sw_vlc">Kostenloser plattformübergreifender Multimedia-Player für alles.</sys:String>
+    <sys:String x:Key="L.Desc.sw_blender">Komplette 3D-Erstellungssuite (kostenlos und Open Source).</sys:String>
+    <sys:String x:Key="L.Desc.sw_obs_studio">Professionelle Software für Aufnahmen und Streaming.</sys:String>
+    <sys:String x:Key="L.Desc.sw_steam">Die ultimative Plattform zum Spielen und Diskutieren von Spielen.</sys:String>
+    <sys:String x:Key="L.Desc.sw_epic">Epic Games Store und offizieller Game-Launcher.</sys:String>
+    <sys:String x:Key="L.Desc.sw_vscode">Leistungsstarke Code-Bearbeitung, neu definiert für alle.</sys:String>
+    <sys:String x:Key="L.Desc.sw_notepadplus">Leichtgewichtiger Quelltext-Editor und Ersatz für Notepad.</sys:String>
+    <sys:String x:Key="L.Desc.sw_sharex">Erweitertes Tool für Bildschirmaufnahmen und Filesharing.</sys:String>
+    <sys:String x:Key="L.Desc.sw_7zip">Archivierungsprogramm mit hoher Kompressionsrate und Open-Source-Wurzeln.</sys:String>
+    <sys:String x:Key="L.Desc.sw_winrar">Leistungsstarker Manager für ZIP-, RAR- und andere Archive.</sys:String>
+    <sys:String x:Key="L.Desc.sw_onecommander">Moderner Zweifenster-Dateimanager mit erweiterten Funktionen.</sys:String>
+    <sys:String x:Key="L.Desc.sw_directory_opus">Professioneller Windows Explorer Ersatz.</sys:String>
+    <sys:String x:Key="L.Desc.tweak_verbose_login">Detaillierte Statusmeldungen während der Anmeldung/Abmeldung anzeigen.</sys:String>
+    <sys:String x:Key="L.Desc.tweak_disable_cortana">Deaktiviert die Cortana-Suche systemweit.</sys:String>
+    <sys:String x:Key="L.Desc.rem_xbox_overlay">Entfernt die Xbox Game Bar Overlay-Anwendung.</sys:String>
+    <sys:String x:Key="L.Desc.set_allow_modded">Ermöglicht alternative, von der Community modifizierte Versionen bestimmter Software.</sys:String>
+    <sys:String x:Key="L.Desc.set_prompt_restore">Fragt vor Beginn jeder Aufgabe nach der Erstellung eines Systemwiederherstellungspunkts.</sys:String>
+    <sys:String x:Key="L.Desc.set_auto_cleanup">Löscht den Windows-Temp-Ordner und Paketmanager-Caches nach einem erfolgreichen Durchlauf.</sys:String>
+    <sys:String x:Key="L.Desc.set_auto_update">Aktualisiert Winget- und Scoop-Repositories automatisch beim Programmstart.</sys:String>
+    <sys:String x:Key="L.Desc.set_verify_checksums">Berechnet und validiert SHA-256-Hashes für alle Direkt-Download-Installer, um Manipulationen vor der Ausführung zu erkennen.</sys:String>
+    <sys:String x:Key="L.Desc.set_clm_mode">Führt alle Tweak-Skripte im PowerShell Constrained Language Mode aus. Erhöht die Sicherheit, kann aber Skripte unterbrechen, die .NET-Typen oder COM-Objekte verwenden.</sys:String>
+    <sys:String x:Key="L.Desc.set_portable_mode">Hält alle Daten im RAM – es werden keine Datenbankdateien auf die Festplatte geschrieben. Ideal für die USB-Nutzung. Erfordert Neustart; alle Sitzungsdaten gehen beim Beenden verloren.</sys:String>
+
+    <!-- Common -->
+    <sys:String x:Key="L.Global.OK">OK</sys:String>
+    <sys:String x:Key="L.Global.Cancel">Abbrechen</sys:String>
+    <sys:String x:Key="L.Global.Continue">Weiter</sys:String>
+    <sys:String x:Key="L.Back">Zurück</sys:String>
+
+    <!-- Home Page -->
+    <sys:String x:Key="L.Home.Title">WinZ</sys:String>
+    <sys:String x:Key="L.Home.SubTitle">Personalisieren Sie Ihre Windows-Installation</sys:String>
+    <sys:String x:Key="L.Home.AdvancedBtn">Erweiterte Einrichtung</sys:String>
+    <sys:String x:Key="L.Home.AdvancedDesc">Wählen Sie Software, Tweaks und Debloating-Optionen aus.</sys:String>
+    <sys:String x:Key="L.Home.AdminNote">Administratorrechte sind für Systemänderungen erforderlich.</sys:String>
+
+    <!-- About Page -->
+    <sys:String x:Key="L.About.Title">Über WinZ</sys:String>
+    <sys:String x:Key="L.About.Sources">Offizielle Softwarequellen</sys:String>
+    <sys:String x:Key="L.About.SourcesDesc">Alle Standard-Softwareeinträge werden direkt von offiziell verifizierten Quellen bezogen. WinZ nutzt die Repositories von Winget (Microsoft) und Scoop, um sicherzustellen, dass Sie immer authentische, unveränderte Binärdateien erhalten.</sys:String>
+    <sys:String x:Key="L.About.Trans">Transparenz &amp; Lokale Verarbeitung</sys:String>
+    <sys:String x:Key="L.About.TransDesc">WinZ arbeitet vollständig auf Ihrem lokalen Computer. Keine Telemetrie, kein Cloud-Tracking und keine externe Datenübertragung. Alle Datenbankeinträge und Tweak-Skripte werden ohne externe Abhängigkeiten ausgeführt.</sys:String>
+    <sys:String x:Key="L.About.CreatedBy">ERSTELLT VON </sys:String>
+
+    <!-- Advanced Page -->
+    <sys:String x:Key="L.Adv.Title">Erweiterte Einrichtung</sys:String>
+    <sys:String x:Key="L.Adv.Search">Einträge suchen (z.B. Steam, VLC, Deaktivieren)...</sys:String>
+    <sys:String x:Key="L.Adv.ItemsSelected">Element(e) ausgewählt</sys:String>
+    <sys:String x:Key="L.Adv.RunBtn">Auswahl anwenden</sys:String>
+    <sys:String x:Key="L.Adv.Export">Profil exportieren</sys:String>
+    <sys:String x:Key="L.Adv.Import">Profil importieren</sys:String>
+    <sys:String x:Key="L.Adv.SoftwareHeader">Wählen Sie Software zur Installation aus</sys:String>
+    <sys:String x:Key="L.Adv.WindowsHeader">Wählen Sie System-Optimierungen zur Anwendung aus</sys:String>
+    <sys:String x:Key="L.Adv.AutomationHeader">Automatisierte Systemaufgaben konfigurieren</sys:String>
+
+    <!-- Running Page -->
+    <sys:String x:Key="L.Run.Stop">Setup stoppen</sys:String>
+    <sys:String x:Key="L.Run.Log">Detailliertes Protokoll</sys:String>
+    <sys:String x:Key="L.Run.Cancelling">Abbrechen...</sys:String>
+    <sys:String x:Key="L.Run.Starting">Wird gestartet...</sys:String>
+    <sys:String x:Key="L.Run.Done">Einrichtung abgeschlossen</sys:String>
+    <sys:String x:Key="L.Run.Cancelled">Setup abgebrochen</sys:String>
+    <sys:String x:Key="L.Run.CancelSub">Sitzung zurückgerollt. Einige Änderungen können bestehen bleiben.</sys:String>
+    <sys:String x:Key="L.Run.Methods.Winget">Installation über Winget</sys:String>
+    <sys:String x:Key="L.Run.Methods.Scoop">Installation über Scoop</sys:String>
+    <sys:String x:Key="L.Run.Methods.Direct">Wird heruntergeladen und installiert</sys:String>
+    <sys:String x:Key="L.Run.Methods.Tweak">System-Tweak wird angewendet</sys:String>
+    <sys:String x:Key="L.Run.Methods.Remove">Entfernen über PowerShell</sys:String>
+
+    <!-- Settings Page -->
+    <sys:String x:Key="L.Set.Title">Einstellungen</sys:String>
+    <sys:String x:Key="L.Set.Language">Anwendungssprache</sys:String>
+    <sys:String x:Key="L.Set.LanguageDesc">UI-Sprache ändern (sofort angewendet).</sys:String>
+    
+    <!-- Summary Page -->
+    <sys:String x:Key="L.Sum.SuccessHeader">Setup abgeschlossen ✓</sys:String>
+    <sys:String x:Key="L.Sum.ErrorHeader">Setup mit Fehlern beendet</sys:String>
+    <sys:String x:Key="L.Sum.SuccessSub">Alles wurde erfolgreich ausgeführt. Ihr System ist bereit.</sys:String>
+    <sys:String x:Key="L.Sum.ErrorSub">Aufgabe(n) fehlgeschlagen. Details unten prüfen.</sys:String>
+    <sys:String x:Key="L.Sum.Succeeded">Erfolgreich: </sys:String>
+    <sys:String x:Key="L.Sum.Failed">Fehlgeschlagen: </sys:String>
+    <sys:String x:Key="L.Sum.Skipped">Übersprungen: </sys:String>
+    <sys:String x:Key="L.Sum.ViewLogs">Protokolle anzeigen</sys:String>
+    <sys:String x:Key="L.Sum.Finish">Beenden</sys:String>
+
+    <!-- Dialogs -->
+    <sys:String x:Key="L.Diag.Ready.Title">Bereit zum Anwenden</sys:String>
+    <sys:String x:Key="L.Diag.Ready.Msg">Die gewählte Software und Tweaks werden nun angewendet.&#x0a;&#x0a;Speichern Sie Ihre Arbeit, da einige Vorgänge Systemkomponenten neu starten können.</sys:String>
+    <sys:String x:Key="L.Diag.Ready.Confirm">Setup starten</sys:String>
+    
+    <sys:String x:Key="L.Diag.Safety.Title">Systemschutz</sys:String>
+    <sys:String x:Key="L.Diag.Safety.Msg">Es wird empfohlen, einen Wiederherstellungspunkt zu erstellen. Dies bietet Sicherheit bei unerwartetem Verhalten.&#x0a;&#x0a;Möchten Sie jetzt einen Punkt erstellen? (Dauert ~30 Sek.)</sys:String>
+    <sys:String x:Key="L.Diag.Safety.Confirm">Punkt erstellen</sys:String>
+    <sys:String x:Key="L.Diag.Safety.Skip">Überspringen</sys:String>
+
+    <sys:String x:Key="L.Diag.Modded.Title">Warnung: Modifizierte Software</sys:String>
+    <sys:String x:Key="L.Diag.Modded.Msg">Sie wählen eine modifizierte Version. Diese ist nicht offiziell und kann Community-Patches enthalten.&#x0a;&#x0a;WinZ haftet nicht für Probleme. Möchten Sie fortfahren?</sys:String>
+
+    <sys:String x:Key="L.Diag.Cancel.Title">Setup abbrechen</sys:String>
+    <sys:String x:Key="L.Diag.Cancel.Msg">Sicher, dass Sie abbrechen wollen? Dies stoppt aktuelle Vorgänge.</sys:String>
+
+    <sys:String x:Key="L.Diag.ModdedExp.Title">Experimentelle Funktionen</sys:String>
+    <sys:String x:Key="L.Diag.ModdedExp.Msg">Durch das Aktivieren von gemoddeter Software können Sie von der Community gepatchte Versionen von Anwendungen installieren. Diese Versionen können Premium-Funktionen oder Community-Modifikationen enthalten.&#x0a;&#x0a;Modifizierte Elemente werden in der Liste mit einem dezenten blauen Hintergrund angezeigt.&#x0a;&#x0a;Warnung: Sicherheit und Stabilität sind nicht garantiert. Die Verwendung erfolgt auf eigene Gefahr.</sys:String>
+    <sys:String x:Key="L.Diag.ModdedExp.Confirm">Aktivieren</sys:String>
+    <sys:String x:Key="L.Diag.ModdedExp.Cancel">Zurück</sys:String>
+
+    <!-- Review Dialog -->
+    <sys:String x:Key="L.Rev.Title">Auswahl überprüfen</sys:String>
+    <sys:String x:Key="L.Rev.Msg">Sie sind im Begriff, {0} Änderungen anzuwenden:</sys:String>
+    <sys:String x:Key="L.Rev.Confirm">Bestätigen &amp; Weiter</sys:String>
+
+    <!-- Reinstall Dialog -->
+    <sys:String x:Key="L.Rei.Title">Neuinstallation erkannt</sys:String>
+    <sys:String x:Key="L.Rei.Msg">Einige Elemente befinden sich bereits auf Ihrem System. Deaktivieren Sie alle, die Sie nicht neu installieren möchten. Ausgewählte Elemente werden vor der Neuinstallation deinstalliert.</sys:String>
+
+    <!-- Summary Status Labels -->
+    <sys:String x:Key="L.Sum.DoneItem">Erledigt</sys:String>
+    <sys:String x:Key="L.Sum.FailedItem">Fehlgeschlagen</sys:String>
+    <sys:String x:Key="L.Sum.SkippedItem">Übersprungen</sys:String>
+
+    <!-- CLM Warning Dialog -->
+    <sys:String x:Key="L.Diag.Clm.Title">Warnung zur Ausführungshärtung</sys:String>
+    <sys:String x:Key="L.Diag.Clm.Msg">Die Aktivierung der isolierten PowerShell-Ausführung sperrt alle Tweak-Skripte in den Modus für eingeschränkte Sprache (CLM).&#x0a;&#x0a;Dies verhindert, dass Skripte .NET-Reflektion, COM-Objekte und andere fortgeschrittene Funktionen verwenden. Als Ergebnis:&#x0a;&#x0a;  • Einige komplexe Tweaks (z. B. modifizierte IDM-Installation) werden nicht ausgeführt.&#x0a;  • Skripte, die auf externe .NET-APIs angewiesen sind, werden blockiert.&#x0a;&#x0a;Aktivieren Sie dies nur, wenn Sie die Auswirkungen verstehen. Fortfahren?</sys:String>
+    <sys:String x:Key="L.Diag.Clm.Confirm">CLM aktivieren</sys:String>
+    <sys:String x:Key="L.Diag.Clm.Cancel">Zurück</sys:String>
+
+    <!-- Portable Mode Dialogs -->
+    <sys:String x:Key="L.Diag.Portable.Enable.Title">Portablen Modus aktivieren</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Enable.Msg">**Portabler Modus** hält alle WinZ-Daten strikt im [Arbeitsspeicher] – es werden keine Datenbankdateien auf die Festplatte geschrieben.&#x0a;&#x0a;Das bedeutet:&#x0a;&#x0a;  • Ihre Aufgabenauswahl und Einstellungen werden [NICHT gespeichert].&#x0a;  • Der Installationsverlauf geht beim Beenden [verloren].&#x0a;  • Die App [muss neu gestartet werden], damit diese Änderung wirksam wird.&#x0a;&#x0a;Eine Sentinel-Datei (**winz.portable**) wird neben der ausführbaren Datei platziert, um diesen Modus beim nächsten Start zu aktivieren.&#x0a;&#x0a;Fortfahren?</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Disable.Title">Portablen Modus deaktivieren</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Disable.Msg">Das Deaktivieren des portablen Modus stellt den persistenten lokalen Speicher wieder her. Beim nächsten Start wird eine Datenbankdatei in Ihrem AppData-Ordner erstellt.&#x0a;&#x0a;Die App muss neu gestartet werden, damit diese Änderung wirksam wird. Fortfahren?</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Confirm">Jetzt neu starten</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Cancel">Zurück</sys:String>
+
+    <!-- Error Messages -->
+    <sys:String x:Key="L.Err.Cancelled">Benutzer hat abgebrochen</sys:String>
+</ResourceDictionary>

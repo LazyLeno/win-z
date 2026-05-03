@@ -19,15 +19,15 @@ public class TweakEngine(LogService log)
     {
         ArgumentNullException.ThrowIfNull(task);
         
-        if (string.IsNullOrWhiteSpace(task.TweakScript))
+        if (string.IsNullOrWhiteSpace(task.EffectiveTweakScript))
         {
-            log.Error($"No script defined for tweak: {task.Name}");
+            log.Error($"No script defined for tweak: {task.DisplayName}");
             return false;
         }
 
-        string trimmedScript = task.TweakScript.TrimStart();
+        string trimmedScript = task.EffectiveTweakScript.TrimStart();
         bool isReg = trimmedScript.StartsWith("reg ", StringComparison.OrdinalIgnoreCase);
-        log.Cmd(task.TweakScript);
+        log.Cmd(task.EffectiveTweakScript);
 
         if (isReg)
         {
@@ -35,8 +35,8 @@ public class TweakEngine(LogService log)
         }
         else
         {
-            // Use async version to prevent UI/Engine hang during heavy scripts (like IDM install)
-            return await RunExternalPowerShellAsync(task.TweakScript, ct);
+            bool clmEnabled = await DataService.Instance.GetSettingAsync("ConstrainedLanguageMode") == "True";
+            return await RunExternalPowerShellAsync(task.EffectiveTweakScript, ct, clmEnabled);
         }
     }
 
@@ -44,10 +44,10 @@ public class TweakEngine(LogService log)
     {
         try
         {
-            var parts = task.TweakScript!.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var parts = task.EffectiveTweakScript!.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 3 || !parts[1].Equals("add", StringComparison.OrdinalIgnoreCase))
             {
-                return RunExternalProcess("reg.exe", task.TweakScript!.Substring(4));
+                return RunExternalProcess("reg.exe", task.EffectiveTweakScript!.Substring(4));
             }
 
             string path = parts[2];
@@ -68,18 +68,21 @@ public class TweakEngine(LogService log)
             if (kind == RegistryValueKind.QWord && long.TryParse(data, out long qword)) valueData = qword;
 
             key.SetValue(valueName ?? "", valueData, kind);
-            log.Ok($"Registry tweak applied: {task.Name}");
+            log.Ok($"Registry tweak applied: {task.DisplayName}");
             return true;
         }
         catch (Exception ex)
         {
-            log.Error($"Registry failure: {task.Name} - {ex.Message}");
+            log.Error($"Registry failure: {task.DisplayName} - {ex.Message}");
             return false;
         }
     }
 
-    private async Task<bool> RunExternalPowerShellAsync(string script, CancellationToken ct)
+    private async Task<bool> RunExternalPowerShellAsync(string script, CancellationToken ct, bool constrainedLanguage = false)
     {
+        if (constrainedLanguage)
+            log.Cmd("[CLM] Running in Constrained Language Mode");
+
         var psi = new ProcessStartInfo
         {
             FileName = "powershell.exe",
@@ -89,6 +92,12 @@ public class TweakEngine(LogService log)
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };
+
+        // Constrained Language Mode: set env var to lock down the PS session
+        if (constrainedLanguage)
+        {
+            psi.EnvironmentVariables["__PSLockdownPolicy"] = "4";
+        }
 
         using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
         

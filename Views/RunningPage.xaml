@@ -5,6 +5,16 @@
       KeepAlive="False" Unloaded="Page_Unloaded">
 
 
+    <Page.Resources>
+        <Style x:Key="StopBtn" TargetType="Button" BasedOn="{StaticResource NativeBtn}">
+            <Setter Property="Background" Value="#3D1A1A"/>
+            <Setter Property="Foreground" Value="#F87171"/>
+            <Setter Property="BorderBrush" Value="#5E2A2A"/>
+            <Setter Property="Padding" Value="16,4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+    </Page.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -15,21 +25,33 @@
 
         <!-- Header -->
         <Border Grid.Row="0" Background="#252525" BorderBrush="#3A3A3A" BorderThickness="0,0,0,1">
-            <StackPanel Margin="20,15">
-                <TextBlock x:Name="CurrentTaskLabel" Text="Starting Setup..." FontSize="18" FontWeight="Bold" Foreground="White"/>
-                <TextBlock x:Name="SubLabel" Text="Initializing installation engine" FontSize="11" Foreground="#AAAAAA" Margin="0,2,0,0"/>
-            </StackPanel>
+            <Grid Margin="20,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="{Binding CurrentTask, Converter={StaticResource Localize}, ConverterParameter=Name}" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="{Binding SubText}" FontSize="11" Foreground="#AAAAAA" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" x:Name="CancelBtn" Content="{DynamicResource L.Run.Stop}" Click="Cancel_Click" 
+                        Style="{StaticResource StopBtn}" VerticalAlignment="Center"/>
+            </Grid>
         </Border>
 
         <!-- Progress bar (Utilitarian) -->
         <Border Grid.Row="1" Background="#212121" Padding="20,10" BorderBrush="#2D2D2D" BorderThickness="0,0,0,1">
             <StackPanel>
                 <Grid Margin="0,0,0,4">
-                    <TextBlock x:Name="ProgressLabel" Text="0 / 0" FontSize="10" Foreground="#888888" HorizontalAlignment="Right"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="{Binding Progress}" FontSize="10" Foreground="#888888"/>
+                        <TextBlock Text=" / " FontSize="10" Foreground="#888888"/>
+                        <TextBlock Text="{Binding TotalTasks}" FontSize="10" Foreground="#888888"/>
+                    </StackPanel>
                 </Grid>
-                <Border Background="#333333" Height="4">
-                    <Border x:Name="ProgressFill" Background="{StaticResource AccentBrush}" HorizontalAlignment="Left" Width="0"/>
-                </Border>
+                <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="{Binding TotalTasks, Mode=OneWay}" Height="4" Background="#333333" Foreground="{StaticResource AccentBrush}" BorderThickness="0"/>
             </StackPanel>
         </Border>
 
@@ -46,49 +68,78 @@
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Status, Converter={StaticResource StatusToIcon}}"
-                                           FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                           Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}"
-                                           RenderTransformOrigin="0.5,0.5">
-                                    <TextBlock.RenderTransform>
-                                        <RotateTransform Angle="0"/>
-                                    </TextBlock.RenderTransform>
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
+                                <Grid Grid.Row="0" Grid.Column="0" Width="14" Height="14" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <!-- Default Icons (Check, Cross, etc) -->
+                                    <TextBlock Text="{Binding Status, Converter={StaticResource StatusToIcon}}"
+                                               FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                               Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}"
+                                               Visibility="{Binding IsRunning, Converter={StaticResource LogicToVis}, ConverterParameter=Inverse}"/>
+
+                                    <!-- Cool Modern Spinner -->
+                                    <Viewbox Visibility="{Binding IsRunning, Converter={StaticResource LogicToVis}}" 
+                                             Width="12" Height="12" 
+                                             RenderTransformOrigin="0.5,0.5">
+                                        <Viewbox.Style>
+                                            <Style TargetType="Viewbox">
+                                                <Setter Property="RenderTransform">
+                                                    <Setter.Value>
+                                                        <RotateTransform Angle="0"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                        <DataTrigger.EnterActions>
+                                                            <BeginStoryboard x:Name="SpinningAnim">
+                                                                <Storyboard>
+                                                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                                                     From="0" To="360" Duration="0:0:0.75" RepeatBehavior="Forever"/>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </DataTrigger.EnterActions>
+                                                        <DataTrigger.ExitActions>
+                                                            <RemoveStoryboard BeginStoryboardName="SpinningAnim"/>
+                                                        </DataTrigger.ExitActions>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Viewbox.Style>
+                                        <!-- Symmetric path to prevent wobble -->
+                                        <Grid Width="100" Height="100">
+                                            <Path Data="M 50 10 A 40 40 0 1 1 20 20" 
+                                                  Stroke="{Binding Status, Converter={StaticResource StatusToBrush}}" 
+                                                  StrokeThickness="10" 
+                                                  StrokeStartLineCap="Round" 
+                                                  StrokeEndLineCap="Round"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Viewbox>
+                                </Grid>
+
+                                <Image Grid.Row="0" Grid.Column="1" Source="{Binding Id, Converter={StaticResource IconToImage}}"
+                                       Width="16" Height="16" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <Image.Style>
+                                        <Style TargetType="Image">
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
-                                                    <DataTrigger.EnterActions>
-                                                        <BeginStoryboard x:Name="SpinningAnim">
-                                                            <Storyboard>
-                                                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                                                                 From="0" To="360" Duration="0:0:1.2" RepeatBehavior="Forever"/>
-                                                            </Storyboard>
-                                                        </BeginStoryboard>
-                                                    </DataTrigger.EnterActions>
-                                                    <DataTrigger.ExitActions>
-                                                        <RemoveStoryboard BeginStoryboardName="SpinningAnim"/>
-                                                    </DataTrigger.ExitActions>
-                                                </DataTrigger>
+                                                <Trigger Property="Source" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </Trigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                    </Image.Style>
+                                </Image>
 
-                                <StackPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12" Foreground="White"/>
-                                    <TextBlock Text="{Binding Category}" FontSize="10" Foreground="#555555"/>
+                                <StackPanel Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0">
+                                    <TextBlock Text="{Binding Id, Converter={StaticResource Localize}, ConverterParameter=Name}" FontWeight="SemiBold" FontSize="12" Foreground="White"/>
+                                    <TextBlock Text="{Binding Category, Converter={StaticResource Localize}, ConverterParameter=Tab}" FontSize="10" Foreground="#555555"/>
                                 </StackPanel>
 
-                                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StatusText}" FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding Status, Converter={StaticResource Localize}, ConverterParameter=Sum}" FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
 
-                                <ProgressBar Grid.Row="1" Grid.ColumnSpan="3" Height="2" Value="{Binding Progress}" Maximum="100" 
-                                             Background="Transparent" Foreground="{StaticResource AccentBrush}" BorderThickness="0"
-                                             Margin="0,8,0,0" VerticalAlignment="Bottom"
-                                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"/>
                             </Grid>
                         </Border>
                     </DataTemplate>
@@ -102,7 +153,7 @@
                 <Button x:Name="LogToggleBtn" Click="LogToggle_Click" Background="Transparent" BorderThickness="0" Padding="20,8" HorizontalContentAlignment="Left">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock x:Name="LogArrow" Text="▶" FontSize="8" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#666666"/>
-                        <TextBlock Text="Detailed Log" FontSize="10" Foreground="#666666"/>
+                        <TextBlock Text="{DynamicResource L.Run.Log}" FontSize="10" Foreground="#666666"/>
                     </StackPanel>
                 </Button>
                 <Border x:Name="LogPanel" Height="0">

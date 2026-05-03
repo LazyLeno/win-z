@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using WinZ.Engine;
 using WinZ.Services;
 using WinZ.ViewModels;
+using System.Windows.Media;
 
 namespace WinZ.Views;
 
@@ -25,25 +26,9 @@ public partial class RunningPage : Page
     {
         InitializeComponent();
         _vm = vm;
+        DataContext = vm;
 
         TaskList.ItemsSource = vm.Tasks;
-
-        // Bind header text changes
-        vm.PropertyChanged += (_, e) =>
-        {
-            switch (e.PropertyName)
-            {
-                case nameof(RunningViewModel.CurrentTask):
-                    CurrentTaskLabel.Text = vm.CurrentTask;
-                    break;
-                case nameof(RunningViewModel.SubText):
-                    SubLabel.Text = vm.SubText;
-                    break;
-                case nameof(RunningViewModel.Progress):
-                    UpdateProgressBar();
-                    break;
-            }
-        };
 
         // Log lines
         vm.LogLines.CollectionChanged += (_, _) =>
@@ -55,21 +40,8 @@ public partial class RunningPage : Page
             }
         };
 
-        // Navigate to Summary when complete — single pathway via Completed event only
+        // Navigate to Summary when complete
         vm.Completed += NavigateToSummary;
-    }
-
-    private void UpdateProgressBar()
-    {
-        int done  = _vm.Progress;
-        int total = _vm.TotalTasks;
-        if (total == 0) return;
-
-        ProgressLabel.Text = $"{done} / {total}";
-
-        // Get track width from parent container
-        if (ProgressFill.Parent is Border track && track.ActualWidth > 0)
-            ProgressFill.Width = (double)done / total * track.ActualWidth;
     }
 
     private void LogToggle_Click(object sender, RoutedEventArgs e)
@@ -85,16 +57,23 @@ public partial class RunningPage : Page
         }
     }
 
+    private void Cancel_Click(object sender, RoutedEventArgs e)
+    {
+        if (WinZDialog.Show(Window.GetWindow(this), "L.Diag.Cancel.Title", 
+            "L.Diag.Cancel.Msg",
+            "L.Global.OK", "L.Global.Cancel", (Geometry)FindResource("Icon.Warning")))
+        {
+            _vm.Cancel();
+            CancelBtn.IsEnabled = false;
+            CancelBtn.Content = Application.Current.FindResource("L.Run.Cancelling");
+        }
+    }
+
     private void NavigateToSummary(object? sender, List<SetupResult> results)
     {
         if (_navigated || results == null) return;
 
         _navigated = true;
-
-        // Fill progress bar to 100%
-        if (ProgressFill.Parent is Border track)
-            ProgressFill.Width = track.ActualWidth;
-        ProgressLabel.Text = $"{_vm.TotalTasks} / {_vm.TotalTasks}";
 
         var summaryVm = new SummaryViewModel();
         summaryVm.Load(results);

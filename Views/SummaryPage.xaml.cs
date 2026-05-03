@@ -21,24 +21,9 @@ public partial class SummaryPage : Page
     public SummaryPage(SummaryViewModel vm)
     {
         InitializeComponent();
-        _vm = vm ?? throw new ArgumentNullException(nameof(vm));
-
-        ResultList.ItemsSource = _vm.Items;
-
-        SucceededCount.Text = _vm.Succeeded.ToString();
-        FailedCount.Text    = _vm.Failed.ToString();
-        SkippedCount.Text   = _vm.Skipped.ToString();
-
-        if (_vm.Failed == 0)
-        {
-            HeadingLabel.Text    = "Setup Complete  ✓";
-            HeadingSubLabel.Text = "Everything ran successfully. Your system is ready.";
-        }
-        else
-        {
-            HeadingLabel.Text    = "Setup Finished with Errors";
-            HeadingSubLabel.Text = string.Format("{0} task{1} failed. Review the details below.", _vm.Failed, _vm.Failed == 1 ? "" : "s");
-        }
+        _vm = vm;
+        DataContext = vm;
+        ResultList.ItemsSource = vm.Items;
     }
 
     private void ViewLog_Click(object sender, RoutedEventArgs e)
@@ -69,6 +54,15 @@ public partial class SummaryPage : Page
     }
 
     private void Close_Click(object sender, RoutedEventArgs e)
-        => Application.Current?.Shutdown();
+    {
+        if (Window.GetWindow(this) is MainWindow mw)
+        {
+            mw.NavigateBackToAdvanced();
+        }
+        else
+        {
+            Application.Current?.Shutdown();
+        }
+    }
 }
 

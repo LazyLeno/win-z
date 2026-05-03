@@ -17,7 +17,9 @@ public class SetupTask : INotifyPropertyChanged
     public string? PackageId   { get; set; }
     public Uri? FallbackUrl    { get; set; }
     public string? TweakScript { get; set; }
+    public string? ExpectedSha256 { get; set; }
     public string Category    { get; set; } = "General";
+    public string Section     { get; set; } = "";
     public string SubCategory { get; set; } = "Misc";
 
     /// <summary>Placeholder for future icon keys (e.g. emoji or resource key)</summary>
@@ -25,6 +27,39 @@ public class SetupTask : INotifyPropertyChanged
 
     public string Description { get; set; } = "";
     public int RetryMax       { get; set; } = 3;
+
+    // Modded Version Support
+    public bool CanBeModded => !string.IsNullOrEmpty(ModdedName);
+    public string? ModdedName { get; set; }
+    public string? ModdedDescription { get; set; }
+    public string? ModdedPackageId { get; set; }
+    public InstallMethod? ModdedMethod { get; set; }
+    public Uri? ModdedFallbackUrl { get; set; }
+    public string? ModdedTweakScript { get; set; }
+    public TaskType? ModdedType { get; set; }
+
+    private bool _isModded;
+    public bool IsModded
+    {
+        get => _isModded;
+        set 
+        { 
+            _isModded = value; 
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(DisplayName));
+            OnPropertyChanged(nameof(DisplayDescription));
+        }
+    }
+
+    public string DisplayName => (IsModded && !string.IsNullOrEmpty(ModdedName)) ? ModdedName : Name;
+    public string DisplayDescription => (IsModded && !string.IsNullOrEmpty(ModdedDescription)) ? ModdedDescription : Description;
+
+    public TaskType EffectiveType => IsModded && ModdedType.HasValue ? ModdedType.Value : Type;
+    public InstallMethod? EffectiveMethod => IsModded ? (ModdedMethod ?? (string.IsNullOrEmpty(ModdedPackageId) ? Method : InstallMethod.Winget)) : Method;
+    public string? EffectivePackageId => IsModded && !string.IsNullOrEmpty(ModdedPackageId) ? ModdedPackageId : PackageId;
+    public string? EffectiveTweakScript => IsModded && !string.IsNullOrEmpty(ModdedTweakScript) ? ModdedTweakScript : TweakScript;
+    public Uri? EffectiveFallbackUrl => IsModded && ModdedFallbackUrl != null ? ModdedFallbackUrl : FallbackUrl;
+
 
     private bool _shouldUninstallFirst;
     public bool ShouldUninstallFirst
@@ -64,6 +99,12 @@ public class SetupTask : INotifyPropertyChanged
 
     public bool IsRunning => Status == TaskStatus.Running;
     public bool IsDone    => Status is TaskStatus.Success or TaskStatus.Failed or TaskStatus.Skipped;
+
+    public void NotifyRefresh()
+    {
+        OnPropertyChanged(nameof(Id));
+        OnPropertyChanged(nameof(Status));
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     protected virtual void OnPropertyChanged([CallerMemberName] string? name = null)

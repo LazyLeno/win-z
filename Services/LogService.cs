@@ -34,6 +34,7 @@ public class LogService : IDisposable
 
     public void Info(string msg)  => Write("[INFO]", msg);
     public void Ok(string msg)    => Write("[OK]  ", msg);
+    public void Warn(string msg)  => Write("[WARN]", msg);
     public void Error(string msg) => Write("[ERR] ", msg);
     public void Cmd(string msg)   => Write("[CMD] ", msg);
 

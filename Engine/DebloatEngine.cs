@@ -16,16 +16,16 @@ public class DebloatEngine(LogService log)
     {
         ArgumentNullException.ThrowIfNull(task);
         
-        if (string.IsNullOrWhiteSpace(task.PackageId))
+        if (string.IsNullOrWhiteSpace(task.EffectivePackageId))
         {
-            log.Error($"No PackageId defined for debloat: {task.Name}");
+            log.Error($"No PackageId defined for debloat: {task.DisplayName}");
             return false;
         }
 
-        log.Cmd($"Removing Appx: {task.PackageId}");
+        log.Cmd($"Removing Appx: {task.EffectivePackageId}");
         
         // Use external powershell to avoid loading the SDK into our memory space
-        return await Task.Run(() => RunPowerShellDebloat(task.PackageId), ct);
+        return await Task.Run(() => RunPowerShellDebloat(task.EffectivePackageId), ct);
     }
 
     private bool RunPowerShellDebloat(string packageId)

@@ -102,61 +102,98 @@ public class TaskTypeToBrushConverter : IValueConverter
     public object ConvertBack(object? v, Type t, object? p, CultureInfo c) => Binding.DoNothing;
 }
 
-/// bool → Visibility — pre-boxed to avoid enum boxing on every binding evaluation
-public class BoolToVisibilityConverter : IValueConverter
+/// bool/string → Visibility (supports 'Inverse' parameter)
+public class LogicToVisibilityConverter : IValueConverter
 {
-    private static readonly object _vis = Visibility.Visible;
-    private static readonly object _col = Visibility.Collapsed;
-
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object Convert(object? v, Type t, object? p, CultureInfo c)
     {
-        bool show = value switch
+        string? ps = p?.ToString();
+        bool val;
+        
+        if (!string.IsNullOrEmpty(ps) && ps != "Inverse" && v is string vs)
         {
-            bool b   => b,
-            string s => !string.IsNullOrEmpty(s),
-            null     => false,
-            _        => true
-        };
-        return show ? _vis : _col;
+            val = vs == ps;
+        }
+        else
+        {
+            val = v switch {
+                bool b => b,
+                string s => !string.IsNullOrEmpty(s),
+                null => false,
+                _ => true
+            };
+            if (ps == "Inverse") val = !val;
+        }
+        return val ? Visibility.Visible : Visibility.Collapsed;
     }
     public object ConvertBack(object? v, Type t, object? p, CultureInfo c) => Binding.DoNothing;
 }
 
-/// string Icon → Visibility (Visible if not empty)
-public class IconUrlToVisibilityConverter : IValueConverter
+/// TaskStatus → Label string
+public class StatusToLabelConverter : IValueConverter
 {
-    private static readonly object _vis = Visibility.Visible;
-    private static readonly object _col = Visibility.Collapsed;
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => string.IsNullOrEmpty(value as string) ? _col : _vis;
+    public object Convert(object? v, Type t, object? p, CultureInfo c)
+        => v is TaskStatus s ? s switch {
+            TaskStatus.Success => "Done",
+            TaskStatus.Failed  => "Failed",
+            TaskStatus.Skipped => "Skipped",
+            TaskStatus.Running => "Working...",
+            _                  => "Queued"
+        } : "";
     public object ConvertBack(object? v, Type t, object? p, CultureInfo c) => Binding.DoNothing;
 }
 
-/// string Icon → Visibility (Visible if empty)
-public class IconUrlToInverseVisibilityConverter : IValueConverter
+/// Task ID → ImageSource
+public class IconToImageConverter : IValueConverter
 {
-    private static readonly object _vis = Visibility.Visible;
-    private static readonly object _col = Visibility.Collapsed;
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => string.IsNullOrEmpty(value as string) ? _vis : _col;
+    public object? Convert(object? v, Type t, object? p, CultureInfo c)
+        => WinZ.Services.AsyncImageLoader.GetIcon(v as string);
     public object ConvertBack(object? v, Type t, object? p, CultureInfo c) => Binding.DoNothing;
 }
 
-/// inverted bool → Visibility
-public class InverseBoolToVisibilityConverter : IValueConverter
+/// string → Localized string (dynamic lookup)
+public class LocalizeConverter : IValueConverter
 {
-    private static readonly object _vis = Visibility.Visible;
-    private static readonly object _col = Visibility.Collapsed;
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object Convert(object? v, Type t, object? p, CultureInfo c)
     {
-        bool hide = value switch
+        try
         {
-            bool b   => b,
-            string s => !string.IsNullOrEmpty(s),
-            null     => false,
-            _        => true
-        };
-        return hide ? _col : _vis;
+            if (v == null) return "";
+            string s = v.ToString() ?? "";
+            if (string.IsNullOrEmpty(s)) return "";
+
+            string param = p?.ToString() ?? "";
+            
+            // Build primary key: "L.<param>.<value>"
+            string key = string.IsNullOrEmpty(param) ? $"L.{s}" : $"L.{param}.{s}";
+            var resource = Application.Current.TryFindResource(key);
+            if (resource != null) return resource.ToString() ?? s;
+
+            // Cross-prefix fallback for navigation strings (Tab, Sec, Cat)
+            if (param is "Tab" or "Sec" or "Cat")
+            {
+                foreach (var alt in new[] { "Tab", "Sec", "Cat" })
+                {
+                    if (alt == param) continue;
+                    var alt_res = Application.Current.TryFindResource($"L.{alt}.{s}");
+                    if (alt_res != null) return alt_res.ToString() ?? s;
+                }
+            }
+
+            return s; // Final fallback: display the raw string
+        }
+        catch
+        {
+            return v?.ToString() ?? "";
+        }
     }
     public object ConvertBack(object? v, Type t, object? p, CultureInfo c) => Binding.DoNothing;
 }
+
+/// int > 0 → bool
+public class CountToBoolConverter : IValueConverter
+{
+    public object Convert(object? v, Type t, object? p, CultureInfo c) => v is int i && i > 0;
+    public object ConvertBack(object? v, Type t, object? p, CultureInfo c) => Binding.DoNothing;
+}
+

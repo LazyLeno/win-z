@@ -16,26 +16,26 @@ public class ScoopInstaller(LogService log)
     {
         ArgumentNullException.ThrowIfNull(task);
         
-        if (string.IsNullOrEmpty(task.PackageId))
+        if (string.IsNullOrEmpty(task.EffectivePackageId))
         {
-            log.Error(string.Format("No PackageId for Scoop: {0}", task.Name));
+            log.Error(string.Format("No PackageId for Scoop: {0}", task.DisplayName));
             return false;
         }
 
         // Check if we need to add a bucket (e.g. extras/pear-desktop)
-        if (task.PackageId.Contains('/') && !task.PackageId.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        if (task.EffectivePackageId.Contains('/') && !task.EffectivePackageId.StartsWith("http", StringComparison.OrdinalIgnoreCase))
         {
-            string bucket = task.PackageId.Split('/')[0];
+            string bucket = task.EffectivePackageId.Split('/')[0];
             await EnsureBucketAsync(bucket, ct);
         }
 
         // Remove force flag as Scoop was rejecting it; we'll rely on the HardCleanup in UninstallAsync
-        log.Cmd(string.Format("scoop install {0}", task.PackageId));
+        log.Cmd(string.Format("scoop install {0}", task.EffectivePackageId));
 
         var psi = new ProcessStartInfo
         {
             FileName = "powershell.exe",
-            Arguments = string.Format("-NoProfile -ExecutionPolicy Bypass -Command \"scoop install {0}\"", task.PackageId),
+            Arguments = string.Format("-NoProfile -ExecutionPolicy Bypass -Command \"scoop install {0}\"", task.EffectivePackageId),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -56,21 +56,21 @@ public class ScoopInstaller(LogService log)
 
         if (p.ExitCode == 0)
         {
-            log.Ok(string.Format("{0} installed via Scoop.", task.Name));
+            log.Ok(string.Format("{0} installed via Scoop.", task.DisplayName));
             return true;
         }
 
-        log.Error(string.Format("{0} Scoop install failed (Code {1})", task.Name, p.ExitCode));
+        log.Error(string.Format("{0} Scoop install failed (Code {1})", task.DisplayName, p.ExitCode));
         return false;
     }
 
     public async Task<bool> UninstallAsync(SetupTask task, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(task);
-        if (string.IsNullOrEmpty(task.PackageId)) return false;
+        if (string.IsNullOrEmpty(task.EffectivePackageId)) return false;
 
-        log.Info(string.Format("Uninstalling {0} via Scoop...", task.Name));
-        string packageName = GetPackageName(task.PackageId);
+        log.Info(string.Format("Uninstalling {0} via Scoop...", task.DisplayName));
+        string packageName = GetPackageName(task.EffectivePackageId);
         
         var psi = new ProcessStartInfo
         {
@@ -94,7 +94,7 @@ public class ScoopInstaller(LogService log)
         
         if (p.ExitCode != 0)
         {
-            log.Info(string.Format("Standard Scoop uninstall failed for {0}. Attempting hard cleanup...", task.Name));
+            log.Info(string.Format("Standard Scoop uninstall failed for {0}. Attempting hard cleanup...", task.DisplayName));
             await HardCleanupAsync(packageName, ct);
         }
 

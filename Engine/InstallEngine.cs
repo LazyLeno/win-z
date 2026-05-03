@@ -10,7 +10,7 @@ using TaskStatus = WinZ.Models.TaskStatus;
 
 namespace WinZ.Engine;
 
-public class InstallEngine
+public partial class InstallEngine
 {
     private readonly LogService _log;
     private readonly WingetInstaller _winget;
@@ -20,6 +20,11 @@ public class InstallEngine
     private readonly DebloatEngine _debloat;
     private readonly RetryPolicy _retry;
     private SetupTask? _activeTask;
+
+    private static readonly SemaphoreSlim _globalLock = new(1, 1);
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"\[(\d+)/(\d+)\]")]
+    private static partial System.Text.RegularExpressions.Regex ProgressRegex();
 
     public event EventHandler<SetupTask>? TaskStarted;
     public event EventHandler<(SetupTask task, bool success)>? TaskCompleted;
@@ -38,7 +43,7 @@ public class InstallEngine
         _log.LineAppended += (line) =>
         {
             if (_activeTask == null) return;
-            var match = System.Text.RegularExpressions.Regex.Match(line, @"\[(\d+)/(\d+)\]");
+            var match = ProgressRegex().Match(line);
             if (match.Success && int.TryParse(match.Groups[1].Value, out int cur) && 
                                  int.TryParse(match.Groups[2].Value, out int total) && total > 0)
             {
@@ -64,41 +69,85 @@ public class InstallEngine
     {
         ArgumentNullException.ThrowIfNull(tasks);
 
-        var results = new List<SetupResult>();
-        bool wingetAvailable = await WingetInstaller.IsAvailableAsync();
-        bool scoopAvailable  = await ScoopInstaller.IsAvailableAsync();
-
-        if (!wingetAvailable)
-            _log.Error("winget not found — install tasks will fall back to alternatives");
-        
-        if (!scoopAvailable && tasks.Any(t => t.IsSelected && t.Method == InstallMethod.Scoop))
-            _log.Error("Scoop not found — tasks requiring Scoop will fail or fall back");
-
-        bool explorerKilled = false;
-        var selectedTasks = tasks.Where(t => t.IsSelected).ToList();
-
-        foreach (var task in selectedTasks)
+        await _globalLock.WaitAsync(ct);
+        try
         {
-            if (ct.IsCancellationRequested) break;
+            var results = new List<SetupResult>();
+            bool wingetAvailable = await WingetInstaller.IsAvailableAsync();
+            bool scoopAvailable  = await ScoopInstaller.IsAvailableAsync();
 
-            if (task.RequiresExplorerRestart && !explorerKilled)
+            if (!wingetAvailable)
+                _log.Error("winget not found — install tasks will fall back to alternatives");
+            
+            if (!scoopAvailable && tasks.Any(t => t.IsSelected && t.Method == InstallMethod.Scoop))
+                _log.Error("Scoop not found — tasks requiring Scoop will fail or fall back");
+
+            bool explorerKilled = false;
+            var selectedTasks = tasks.Where(t => t.IsSelected).ToList();
+            var sessionHistory = new Stack<SetupTask>();
+
+            foreach (var task in selectedTasks)
             {
-                _log.Info("Killing Explorer for optimized batch processing...");
-                KillExplorer();
-                explorerKilled = true;
+                if (ct.IsCancellationRequested) 
+                {
+                    _log.Info("Cancellation detected. Initiating rollback...");
+                    await RollbackAsync(sessionHistory, wingetAvailable, scoopAvailable);
+                    break;
+                }
+
+                if (task.RequiresExplorerRestart && !explorerKilled)
+                {
+                    _log.Info("Killing Explorer for optimized batch processing...");
+                    KillExplorer();
+                    explorerKilled = true;
+                }
+
+                var result = await RunTaskWithHandlingAsync(task, forceDebloat, wingetAvailable, scoopAvailable, ct);
+                if (result != null) 
+                {
+                    results.Add(result);
+                    if (result.Status == TaskStatus.Success)
+                        sessionHistory.Push(task);
+                }
             }
 
-            var result = await RunTaskWithHandlingAsync(task, forceDebloat, wingetAvailable, scoopAvailable, ct);
-            if (result != null) results.Add(result);
-        }
+            if (explorerKilled)
+            {
+                _log.Info("Restarting Explorer after batch complete.");
+                StartExplorer();
+            }
 
-        if (explorerKilled)
+            return results;
+        }
+        finally
         {
-            _log.Info("Restarting Explorer after batch complete.");
-            StartExplorer();
+            _globalLock.Release();
         }
+    }
 
-        return results;
+    private async Task RollbackAsync(Stack<SetupTask> history, bool winget, bool scoop)
+    {
+        _log.Warn("--- STARTING ROLLBACK ---");
+        while (history.Count > 0)
+        {
+            var task = history.Pop();
+            _log.Info($"Reverting: {task.DisplayName}");
+            
+            try
+            {
+                if (task.EffectiveType == TaskType.Install)
+                {
+                    await RunUninstallAsync(task, winget, scoop, CancellationToken.None);
+                }
+                // Tweaks and Debloats are more complex to revert without stored state,
+                // so we focus on unrolling installs for now.
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Failed to revert {task.Name}: {ex.Message}");
+            }
+        }
+        _log.Ok("Rollback complete.");
     }
 
     private void KillExplorer()
@@ -129,7 +178,7 @@ public class InstallEngine
         task.Progress = 0;
         task.Status = TaskStatus.Running;
         TaskStarted?.Invoke(this, task);
-        _log.Info(string.Format("--- BEGIN: {0} ---", task.Name));
+        _log.Info(string.Format("--- BEGIN: {0} ---", task.DisplayName));
 
         bool ok = false;
         try
@@ -144,7 +193,7 @@ public class InstallEngine
         catch (OperationCanceledException)
         {
             task.Status = TaskStatus.Skipped;
-            return new SetupResult(task.Name, TaskStatus.Skipped, "User cancelled");
+            return new SetupResult(task.Name, TaskStatus.Skipped, "Err.Cancelled", task.Id);
         }
         catch (Exception ex)
         {
@@ -157,55 +206,73 @@ public class InstallEngine
         _activeTask = null;
         TaskCompleted?.Invoke(this, (task, ok));
         
-        var result = new SetupResult(task.Name, task.Status, ok ? null : string.Format("See log at {0}", _log.LogPath));
-        _log.Info(string.Format("--- END: {0} ({1}) ---", task.Name, ok ? "SUCCESS" : "FAILED"));
+        var result = new SetupResult(task.DisplayName, task.Status, ok ? null : string.Format("See log at {0}", _log.LogPath), task.Id);
+        _log.Info(string.Format("--- END: {0} ({1}) ---", task.DisplayName, ok ? "SUCCESS" : "FAILED"));
         
         return result;
     }
 
     private async Task<bool> ExecuteTaskAsync(SetupTask task, bool forceDebloat, bool wingetAvailable, bool scoopAvailable, CancellationToken ct)
     {
-        return task.Type switch
+        return task.EffectiveType switch
         {
             TaskType.Install => await RunInstallAsync(task, wingetAvailable, scoopAvailable, ct),
-            TaskType.Tweak   => await _retry.ExecuteAsync(t => _tweaks.ApplyAsync(task, t), task.Name ?? "", task.RetryMax, ct),
-            TaskType.Remove  => await _retry.ExecuteAsync(t => _debloat.ApplyAsync(task, forceDebloat, t), task.Name ?? "", task.RetryMax, ct),
+            TaskType.Tweak   => await _retry.ExecuteAsync(t => _tweaks.ApplyAsync(task, t), task.DisplayName ?? "", task.RetryMax, ct),
+            TaskType.Remove  => await _retry.ExecuteAsync(t => _debloat.ApplyAsync(task, forceDebloat, t), task.DisplayName ?? "", task.RetryMax, ct),
             _ => false
         };
     }
 
     private async Task<bool> RunInstallAsync(SetupTask task, bool wingetAvailable, bool scoopAvailable, CancellationToken ct)
     {
-        if (task.Method == InstallMethod.Winget && wingetAvailable)
-            return await _retry.ExecuteAsync(
-                t => _winget.InstallAsync(task, task.ShouldUninstallFirst, t), task.Name ?? "", task.RetryMax, ct);
+        bool success = false;
 
-        if (task.Method == InstallMethod.Scoop && scoopAvailable)
-            return await _retry.ExecuteAsync(
-                t => _scoop.InstallAsync(task, task.ShouldUninstallFirst, t), task.Name ?? "", task.RetryMax, ct);
-
-        if (task.FallbackUrl != null)
+        // Try primary method
+        if (task.EffectiveMethod == InstallMethod.Winget && wingetAvailable)
         {
-            _log.Info(string.Format("Falling back to direct download for {0}", task.Name));
-            return await _retry.ExecuteAsync(
-                t => _direct.InstallAsync(task, t), task.Name ?? "", task.RetryMax, ct);
+            success = await _retry.ExecuteAsync(
+                t => _winget.InstallAsync(task, task.ShouldUninstallFirst, t), task.DisplayName ?? "", task.RetryMax, ct);
+        }
+        else if (task.EffectiveMethod == InstallMethod.Scoop && scoopAvailable)
+        {
+            success = await _retry.ExecuteAsync(
+                t => _scoop.InstallAsync(task, task.ShouldUninstallFirst, t), task.DisplayName ?? "", task.RetryMax, ct);
+        }
+        else if (task.EffectiveMethod == InstallMethod.DirectDownload && task.EffectiveFallbackUrl != null)
+        {
+            success = await _retry.ExecuteAsync(
+                t => _direct.InstallAsync(task, t), task.DisplayName ?? "", task.RetryMax, ct);
         }
 
-        _log.Error(string.Format("No install method available for {0}", task.Name));
-        return false;
+        // Automatic Fallback logic (between package managers only)
+        if (!success)
+        {
+            // If Winget failed but Scoop is available and it's NOT already the primary method
+            if (task.EffectiveMethod == InstallMethod.Winget && scoopAvailable)
+            {
+                _log.Warn(string.Format("Winget failed for {0}. Attempting fallback to Scoop...", task.DisplayName));
+                success = await _retry.ExecuteAsync(
+                    t => _scoop.InstallAsync(task, task.ShouldUninstallFirst, t), task.DisplayName ?? "", 1, ct);
+            }
+        }
+
+        if (!success)
+            _log.Error(string.Format("Failed to install {0} using available methods.", task.DisplayName));
+
+        return success;
     }
 
     private async Task<bool> RunUninstallAsync(SetupTask task, bool wingetAvailable, bool scoopAvailable, CancellationToken ct)
     {
-        if (task.Method == InstallMethod.Winget && wingetAvailable)
+        if (task.EffectiveMethod == InstallMethod.Winget && wingetAvailable)
             return await _winget.UninstallAsync(task, ct);
 
-        if (task.Method == InstallMethod.Scoop && scoopAvailable)
+        if (task.EffectiveMethod == InstallMethod.Scoop && scoopAvailable)
             return await _scoop.UninstallAsync(task, ct);
 
-        return true; // Tweaks or direct downloads don't have a specific uninstall in this context yet
+        return true;
     }
 }
 
-public record SetupResult(string Name, TaskStatus Status, string? ErrorDetail);
+public record SetupResult(string Name, TaskStatus Status, string? ErrorDetail, string? TaskId = null);
 

@@ -9,20 +9,48 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
     
     <!-- .NET 10 Performance & Memory Optimizations -->
     <TieredCompilation>true</TieredCompilation>
     <TieredCompilationQuickJit>true</TieredCompilationQuickJit>
     <PublishReadyToRun>true</PublishReadyToRun>
+    <ReadyToRunComposite>true</ReadyToRunComposite>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     
-    <!-- Aggressive Memory & Size Optimizations -->
+    <!-- GC & Memory Tuning for 20MB Target -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    
+    <!-- GC & Memory Tuning for 20MB Target -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <RetainVMGarbageCollection>false</RetainVMGarbageCollection>
+    
+    <!-- Aggressive Size Optimizations -->
     <OptimizationPreference>Size</OptimizationPreference>
     <StackTraceSupport>false</StackTraceSupport>
+    <EventSourceSupport>false</EventSourceSupport>
+    <DebuggerSupport>false</DebuggerSupport>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    
+    <!-- Deployment Optimizations -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>false</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    <PackageReference Include="System.Management" Version="9.0.0" />
+    <Resource Include="Assets\*.png" />
+    <Resource Include="Assets\Icons\*.png" />
+    <Resource Include="Assets\app_icon.ico" />
   </ItemGroup>
 
 </Project>

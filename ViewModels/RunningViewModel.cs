@@ -23,7 +23,7 @@ public class RunningViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<SetupTask> Tasks    { get; } = new();
     public ObservableCollection<string>   LogLines { get; } = new();
 
-    private string _currentTask = "Starting…";
+    private string _currentTask = "L.Run.Starting";
     public string CurrentTask { get => _currentTask; set { _currentTask = value; OnPC(); } }
 
     private string _subText = "";
@@ -61,20 +61,22 @@ public class RunningViewModel : INotifyPropertyChanged, IDisposable
     {
         Application.Current?.Dispatcher?.InvokeAsync(() =>
         {
-            CurrentTask = t.Name ?? "";
+            CurrentTask = t.Id;
             SubText = t.Type switch
             {
                 TaskType.Install => t.Method switch {
-                    InstallMethod.Winget => "Installing via Winget",
-                    InstallMethod.Scoop  => "Installing via Scoop",
-                    _ => "Downloading and installing"
+                    InstallMethod.Winget => GetText("L.Run.Methods.Winget"),
+                    InstallMethod.Scoop  => GetText("L.Run.Methods.Scoop"),
+                    _ => GetText("L.Run.Methods.Direct")
                 },
-                TaskType.Tweak   => "Applying system tweak",
-                TaskType.Remove  => "Removing via PowerShell",
+                TaskType.Tweak   => GetText("L.Run.Methods.Tweak"),
+                TaskType.Remove  => GetText("L.Run.Methods.Remove"),
                 _                => ""
             };
         });
     }
+
+    private string GetText(string key) => Application.Current?.TryFindResource(key)?.ToString() ?? key;
 
     private void OnTaskCompleted(object? s, (SetupTask task, bool success) args)
     {
@@ -93,19 +95,37 @@ public class RunningViewModel : INotifyPropertyChanged, IDisposable
 
     public Task RunAsync() => RunAsync(CancellationToken.None);
 
+    private CancellationTokenSource? _sessionCts;
+
     public async Task RunAsync(CancellationToken ct)
     {
-        Results = await _engine.RunAsync(Tasks, false, ct);
+        _sessionCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        
+        Results = await _engine.RunAsync(Tasks, false, _sessionCts.Token);
 
-        if (Results != null)
+        if (Results != null && !_sessionCts.IsCancellationRequested)
         {
-            foreach (var r in Results) _dataService.SaveResult(r);
+            await Task.WhenAll(Results.Select(r => _dataService.SaveResultAsync(r)));
 
             IsComplete  = true;
-            CurrentTask = "Setup complete";
-            SubText     = $"{Results.Count(r => r.Status == TaskStatus.Success)} succeeded · {Results.Count(r => r.Status == TaskStatus.Failed)} failed";
+            CurrentTask = "L.Run.Done";
+            int succ = Results.Count(r => r.Status == TaskStatus.Success);
+            int fail = Results.Count(r => r.Status == TaskStatus.Failed);
+            SubText     = $"{succ} {GetText("L.Sum.DoneItem")} · {fail} {GetText("L.Sum.FailedItem")}";
             Completed?.Invoke(this, Results);
         }
+        else if (_sessionCts.IsCancellationRequested)
+        {
+            IsComplete = true;
+            CurrentTask = "L.Run.Cancelled";
+            SubText = GetText("L.Run.CancelSub");
+            Completed?.Invoke(this, Results ?? new List<SetupResult>());
+        }
+    }
+
+    public void Cancel()
+    {
+        _sessionCts?.Cancel();
     }
 
     public void Dispose()

@@ -1,71 +1,48 @@
 using System;
-using System.Runtime;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Threading;
+using System.Runtime.InteropServices;
 
 namespace WinZ.Services;
 
-public static class MemoryService
+/// <summary>
+/// Two-tier memory management:
+/// - FastOptimize: cheap Gen 0/1 collect, call every ~1s during active UI interaction.
+/// - DeepOptimize: full Gen 2 + OS working-set trim, call only on page transitions.
+/// </summary>
+public static partial class MemoryService
 {
-    [DllImport("kernel32.dll")]
-    private static extern bool SetProcessWorkingSetSize(IntPtr process, nint min, nint max);
+    [LibraryImport("kernel32.dll", EntryPoint = "SetProcessWorkingSetSize")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetProcessWorkingSetSize(IntPtr hProcess, IntPtr dwMinimumWorkingSetSize, IntPtr dwMaximumWorkingSetSize);
 
-    private static readonly CancellationTokenSource _reaperCts = new();
-
-    static MemoryService()
+    /// <summary>
+    /// Fast, non-blocking Gen 0+1 collection. Handles the short-lived WPF
+    /// hit-test and binding allocations without causing UI pauses.
+    /// </summary>
+    public static void FastOptimize()
     {
-        // Configure GC for a low-memory-footprint interactive app:
-        // - Server GC: off (default for desktop — lower baseline memory)
-        // - Sustained low latency: allows GC to run more often at smaller sizes,
-        //   preventing large one-time spikes that Task Manager shows as "rising RAM"
-        GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
-
-        // Reaper: runs on a background thread every 45 seconds
-        // Using a dedicated thread avoids blocking the ThreadPool
-        var reaperThread = new Thread(() => ReaperLoop(_reaperCts.Token))
-        {
-            IsBackground  = true,
-            Priority      = ThreadPriority.Lowest,
-            Name          = "WinZ.MemoryReaper"
-        };
-        reaperThread.Start();
-    }
-
-    private static void ReaperLoop(CancellationToken token)
-    {
-        while (!token.IsCancellationRequested)
-        {
-            // Sleep on the dedicated thread — no ThreadPool slot consumed
-            Thread.Sleep(TimeSpan.FromSeconds(45));
-            if (!token.IsCancellationRequested)
-                Optimize();
-        }
+        GC.Collect(1, GCCollectionMode.Optimized, false, false);
     }
 
     /// <summary>
-    /// Aggressively reclaims managed and native memory back to the OS.
-    /// Safe to call from any thread.
+    /// Full compacting Gen 2 collection + OS working set trim.
+    /// Use sparingly — blocks briefly. Best called on navigation/page transitions.
     /// </summary>
-    public static void Optimize()
+    public static void DeepOptimize()
     {
+        GC.Collect(2, GCCollectionMode.Forced, true, true);
+        GC.WaitForPendingFinalizers();
+        GC.Collect(2, GCCollectionMode.Forced, true, true);
+
         try
         {
-            // 1. Two-pass collection: first pass finalizes objects, second reclaims them
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-            GC.WaitForPendingFinalizers();
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-
-            // 2. Compact the Large Object Heap to defrag >85KB allocations
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
-
-            // 3. Trim native working set — returns physical pages to the OS
-            using var p = Process.GetCurrentProcess();
-            SetProcessWorkingSetSize(p.Handle, -1, -1);
+            using var process = Process.GetCurrentProcess();
+            if (process.Handle != IntPtr.Zero)
+                SetProcessWorkingSetSize(process.Handle, (IntPtr)(-1), (IntPtr)(-1));
         }
-        catch { /* Best effort */ }
+        catch { }
     }
+
+    // Keep old name as alias for existing callers
+    public static void Optimize() => DeepOptimize();
 }

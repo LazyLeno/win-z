@@ -16,8 +16,18 @@
         <!-- Header -->
         <Border Grid.Row="0" Background="#252525" BorderBrush="#3A3A3A" BorderThickness="0,0,0,1">
             <StackPanel Margin="20,15">
-                <TextBlock x:Name="HeadingLabel" Text="Setup Complete" FontSize="18" FontWeight="Bold" Foreground="White"/>
-                <TextBlock x:Name="HeadingSubLabel" FontSize="11" Foreground="#AAAAAA" Margin="0,2,0,0"/>
+                <TextBlock Text="{DynamicResource L.Sum.SuccessHeader}" FontSize="18" FontWeight="Bold" Foreground="White"
+                           Visibility="{Binding HasFailures, Converter={StaticResource LogicToVis}, ConverterParameter=Inverse}"/>
+                <TextBlock Text="{DynamicResource L.Sum.SuccessSub}" FontSize="11" Foreground="#AAAAAA" Margin="0,2,0,0"
+                           Visibility="{Binding HasFailures, Converter={StaticResource LogicToVis}, ConverterParameter=Inverse}"/>
+                
+                <TextBlock Text="{DynamicResource L.Sum.ErrorHeader}" FontSize="18" FontWeight="Bold" Foreground="#F87171"
+                           Visibility="{Binding HasFailures, Converter={StaticResource LogicToVis}}"/>
+                <StackPanel Orientation="Horizontal" Visibility="{Binding HasFailures, Converter={StaticResource LogicToVis}}">
+                    <TextBlock Text="{Binding Failed}" FontSize="11" Foreground="#F87171" FontWeight="Bold"/>
+                    <TextBlock Text=" "/>
+                    <TextBlock Text="{DynamicResource L.Sum.ErrorSub}" FontSize="11" Foreground="#AAAAAA"/>
+                </StackPanel>
             </StackPanel>
         </Border>
 
@@ -26,20 +36,20 @@
             <StackPanel Orientation="Horizontal">
                 <Border BorderBrush="#333333" BorderThickness="1" Padding="15,5" Margin="0,0,10,0">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Succeeded: " FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="SucceededCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="#4ADE80" Margin="5,0,0,0"/>
+                        <TextBlock Text="{DynamicResource L.Sum.Succeeded}" FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Succeeded}" FontSize="14" FontWeight="Bold" Foreground="#4ADE80" Margin="5,0,0,0"/>
                     </StackPanel>
                 </Border>
                 <Border BorderBrush="#333333" BorderThickness="1" Padding="15,5" Margin="0,0,10,0">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Failed: " FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="FailedCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="#F04747" Margin="5,0,0,0"/>
+                        <TextBlock Text="{DynamicResource L.Sum.Failed}" FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Failed}" FontSize="14" FontWeight="Bold" Foreground="#F04747" Margin="5,0,0,0"/>
                     </StackPanel>
                 </Border>
                 <Border BorderBrush="#333333" BorderThickness="1" Padding="15,5">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Skipped: " FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="SkippedCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="#AAAAAA" Margin="5,0,0,0"/>
+                        <TextBlock Text="{DynamicResource L.Sum.Skipped}" FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Skipped}" FontSize="14" FontWeight="Bold" Foreground="#AAAAAA" Margin="5,0,0,0"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -73,12 +83,12 @@
                                            Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12" Foreground="White"/>
-                                    <TextBlock Text="{Binding ErrorDetail}" FontSize="9" Foreground="#F04747" Margin="0,1,0,0" TextWrapping="Wrap"
-                                               Visibility="{Binding ErrorDetail, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="{Binding TaskId, Converter={StaticResource Localize}, ConverterParameter=Name}" FontWeight="SemiBold" FontSize="12" Foreground="White"/>
+                                    <TextBlock Text="{Binding ErrorDetail, Converter={StaticResource Localize}}" FontSize="9" Foreground="#F04747" Margin="0,1,0,0" TextWrapping="Wrap"
+                                               Visibility="{Binding ErrorDetail, Converter={StaticResource LogicToVis}}"/>
                                 </StackPanel>
 
-                                <TextBlock Grid.Column="2" Text="{Binding StatusLabel}" FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="{Binding StatusLabel, Converter={StaticResource Localize}}" FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
                     </DataTemplate>
@@ -89,8 +99,8 @@
         <!-- Footer -->
         <Border Grid.Row="3" Background="#252525" BorderBrush="#3A3A3A" BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,12">
-                <Button Content="View Logs" Style="{StaticResource GhostBtn}" Click="ViewLog_Click" Margin="0,0,10,0" Width="90"/>
-                <Button Content="Finish" Style="{StaticResource PrimaryBtn}" Click="Close_Click" Width="90"/>
+                <Button Content="{DynamicResource L.Sum.ViewLogs}" Style="{StaticResource GhostBtn}" Click="ViewLog_Click" Margin="0,0,10,0" Width="90"/>
+                <Button Content="{DynamicResource L.Sum.Finish}" Style="{StaticResource PrimaryBtn}" Click="Close_Click" Width="90"/>
             </StackPanel>
         </Border>
     </Grid>

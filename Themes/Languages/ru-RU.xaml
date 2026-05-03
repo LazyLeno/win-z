@@ -1,0 +1,227 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+                    xml:space="preserve">
+    
+    <!-- Tabs -->
+    <sys:String x:Key="L.Tab.Special">Специальные</sys:String>
+    <sys:String x:Key="L.Tab.Safety">Безопасность</sys:String>
+    <sys:String x:Key="L.Tab.General">Общие</sys:String>
+    <sys:String x:Key="L.Tab.Software">Программы</sys:String>
+    <sys:String x:Key="L.Tab.Windows">Система Windows</sys:String>
+    <sys:String x:Key="L.Tab.Automation">Автоматизация</sys:String>
+
+    <!-- Categories / Groups -->
+    <sys:String x:Key="L.Cat.Safety &amp; Content">Безопасность и контент</sys:String>
+    <sys:String x:Key="L.Cat.System Protection">Защита системы</sys:String>
+    <sys:String x:Key="L.Cat.Automation">Автоматизация</sys:String>
+    <sys:String x:Key="L.Cat.Web Browsers">Веб-браузеры</sys:String>
+    <sys:String x:Key="L.Cat.Download Managers">Менеджеры загрузок</sys:String>
+    <sys:String x:Key="L.Cat.Security">Безопасность</sys:String>
+    <sys:String x:Key="L.Cat.Communication">Общение</sys:String>
+    <sys:String x:Key="L.Cat.Productivity">Продуктивность</sys:String>
+    <sys:String x:Key="L.Cat.Music">Музыка</sys:String>
+    <sys:String x:Key="L.Cat.Media">Медиа</sys:String>
+    <sys:String x:Key="L.Cat.Creativity">Творчество</sys:String>
+    <sys:String x:Key="L.Cat.Gaming">Игры</sys:String>
+    <sys:String x:Key="L.Cat.Development">Разработка</sys:String>
+    <sys:String x:Key="L.Cat.Utilities">Утилиты</sys:String>
+    <sys:String x:Key="L.Cat.File Managers">Файловые менеджеры</sys:String>
+    <sys:String x:Key="L.Cat.System Tweaks">Системные твики</sys:String>
+    <sys:String x:Key="L.Cat.Privacy">Конфиденциальность</sys:String>
+    <sys:String x:Key="L.Cat.Debloat">Очистка (Debloat)</sys:String>
+
+    <!-- Menu Bar -->
+    <sys:String x:Key="L.Menu.File">Файл</sys:String>
+    <sys:String x:Key="L.Menu.Settings">Настройки</sys:String>
+    <sys:String x:Key="L.Menu.Help">Справка</sys:String>
+    <sys:String x:Key="L.Menu.Export">Экспорт профиля...</sys:String>
+    <sys:String x:Key="L.Menu.Import">Импорт профиля...</sys:String>
+    <sys:String x:Key="L.Menu.Exit">Выход</sys:String>
+    <sys:String x:Key="L.Menu.Preferences">Параметры...</sys:String>
+    <sys:String x:Key="L.Menu.Portable">Портативный режим</sys:String>
+    <sys:String x:Key="L.Menu.About">О программе WinZ</sys:String>
+
+    <!-- Task Names -->
+    <sys:String x:Key="L.Name.sw_librewolf">LibreWolf</sys:String>
+    <sys:String x:Key="L.Name.sw_brave">Brave</sys:String>
+    <sys:String x:Key="L.Name.sw_idm">Internet Download Manager</sys:String>
+    <sys:String x:Key="L.Name.sw_qbittorrent">qBittorrent</sys:String>
+    <sys:String x:Key="L.Name.sw_protonvpn">Proton VPN</sys:String>
+    <sys:String x:Key="L.Name.sw_simplewall">SimpleWall</sys:String>
+    <sys:String x:Key="L.Name.sw_malwarebytes">Malwarebytes</sys:String>
+    <sys:String x:Key="L.Name.sw_keepassxc">KeePassXC</sys:String>
+    <sys:String x:Key="L.Name.sw_discord">Discord</sys:String>
+    <sys:String x:Key="L.Name.sw_obsidian">Obsidian</sys:String>
+    <sys:String x:Key="L.Name.sw_pear_desktop">Pear Desktop</sys:String>
+    <sys:String x:Key="L.Name.sw_vlc">VLC Media Player</sys:String>
+    <sys:String x:Key="L.Name.sw_blender">Blender</sys:String>
+    <sys:String x:Key="L.Name.sw_obs_studio">OBS Studio</sys:String>
+    <sys:String x:Key="L.Name.sw_steam">Steam</sys:String>
+    <sys:String x:Key="L.Name.sw_epic">Epic Games Launcher</sys:String>
+    <sys:String x:Key="L.Name.sw_vscode">Visual Studio Code</sys:String>
+    <sys:String x:Key="L.Name.sw_notepadplus">Notepad++</sys:String>
+    <sys:String x:Key="L.Name.sw_sharex">ShareX</sys:String>
+    <sys:String x:Key="L.Name.sw_7zip">7-Zip</sys:String>
+    <sys:String x:Key="L.Name.sw_winrar">WinRAR</sys:String>
+    <sys:String x:Key="L.Name.sw_onecommander">OneCommander</sys:String>
+    <sys:String x:Key="L.Name.sw_directory_opus">Directory Opus</sys:String>
+    <sys:String x:Key="L.Name.tweak_verbose_login">Подробные сообщения при входе</sys:String>
+    <sys:String x:Key="L.Name.tweak_disable_cortana">Отключить Cortana</sys:String>
+    <sys:String x:Key="L.Name.rem_xbox_overlay">Игровой оверлей Xbox</sys:String>
+    <sys:String x:Key="L.Name.set_allow_modded">Разрешить мод-софт</sys:String>
+    <sys:String x:Key="L.Name.set_prompt_restore">Всегда запрашивать точку восстановления</sys:String>
+    <sys:String x:Key="L.Name.set_auto_cleanup">Автоочистка после завершения</sys:String>
+    <sys:String x:Key="L.Name.set_auto_update">Фоновое обновление репозиториев</sys:String>
+    <sys:String x:Key="L.Name.set_verify_checksums">Проверка контрольных сумм</sys:String>
+    <sys:String x:Key="L.Name.set_clm_mode">Изолированное выполнение PowerShell</sys:String>
+    <sys:String x:Key="L.Name.set_portable_mode">Портативный режим (только в памяти)</sys:String>
+
+    <!-- Task Descriptions -->
+    <sys:String x:Key="L.Desc.sw_librewolf">Форк Firefox, ориентированный на конфиденциальность, с улучшенными настройками безопасности.</sys:String>
+    <sys:String x:Key="L.Desc.sw_brave">Быстрый браузер со встроенной блокировкой рекламы и функциями защиты данных.</sys:String>
+    <sys:String x:Key="L.Desc.sw_idm">Высокоскоростной ускоритель загрузки для всех ваших файлов.</sys:String>
+    <sys:String x:Key="L.Desc.sw_qbittorrent">Альтернатива µTorrent с открытым исходным кодом и расширенными функциями.</sys:String>
+    <sys:String x:Key="L.Desc.sw_protonvpn">Безопасный VPN без логов от создателей ProtonMail.</sys:String>
+    <sys:String x:Key="L.Desc.sw_simplewall">Простой инструмент для настройки Windows Filtering Platform (WFP).</sys:String>
+    <sys:String x:Key="L.Desc.sw_malwarebytes">Продвинутая кибербезопасность для дома и бизнеса.</sys:String>
+    <sys:String x:Key="L.Desc.sw_keepassxc">Кроссплатформенный менеджер паролей, поддерживаемый сообществом.</sys:String>
+    <sys:String x:Key="L.Desc.sw_discord">Голосовое, видео и текстовое общение для сообществ.</sys:String>
+    <sys:String x:Key="L.Desc.sw_obsidian">Мощная локальная база знаний на основе Markdown.</sys:String>
+    <sys:String x:Key="L.Desc.sw_pear_desktop">Многофункциональный настольный клиент YouTube Music.</sys:String>
+    <sys:String x:Key="L.Desc.sw_vlc">Бесплатный кроссплатформенный мультимедийный проигрыватель для всего.</sys:String>
+    <sys:String x:Key="L.Desc.sw_blender">Полный пакет для создания 3D (бесплатный и с открытым кодом).</sys:String>
+    <sys:String x:Key="L.Desc.sw_obs_studio">Профессиональное ПО для записи и стриминга.</sys:String>
+    <sys:String x:Key="L.Desc.sw_steam">Ультимативная платформа для игр и обсуждений.</sys:String>
+    <sys:String x:Key="L.Desc.sw_epic">Магазин Epic Games и официальный лаунчер игр.</sys:String>
+    <sys:String x:Key="L.Desc.sw_vscode">Мощное редактирование кода, переосмысленное для всех.</sys:String>
+    <sys:String x:Key="L.Desc.sw_notepadplus">Легкий редактор исходного кода и замена Блокноту.</sys:String>
+    <sys:String x:Key="L.Desc.sw_sharex">Продвинутый инструмент для захвата экрана и обмена файлами.</sys:String>
+    <sys:String x:Key="L.Desc.sw_7zip">Архиватор с высокой степенью сжатия и открытым исходным кодом.</sys:String>
+    <sys:String x:Key="L.Desc.sw_winrar">Мощный менеджер архивов ZIP, RAR и других форматов.</sys:String>
+    <sys:String x:Key="L.Desc.sw_onecommander">Современный двухпанельный файловый менеджер с расширенными функциями.</sys:String>
+    <sys:String x:Key="L.Desc.sw_directory_opus">Профессиональная замена Проводнику Windows.</sys:String>
+    <sys:String x:Key="L.Desc.tweak_verbose_login">Показывать подробные сообщения о статусе при входе и выходе из системы.</sys:String>
+    <sys:String x:Key="L.Desc.tweak_disable_cortana">Отключает интеграцию поиска Cortana во всей системе.</sys:String>
+    <sys:String x:Key="L.Desc.rem_xbox_overlay">Удаляет приложение оверлея Xbox Game Bar.</sys:String>
+    <sys:String x:Key="L.Desc.set_allow_modded">Включает альтернативные версии ПО, модифицированные сообществом.</sys:String>
+    <sys:String x:Key="L.Desc.set_prompt_restore">Запрашивает создание точки восстановления системы перед началом любой задачи.</sys:String>
+    <sys:String x:Key="L.Desc.set_auto_cleanup">Очищает временную папку Windows и кэши менеджеров пакетов после успешного выполнения.</sys:String>
+    <sys:String x:Key="L.Desc.set_auto_update">Автоматически обновляет репозитории Winget и Scoop при запуске приложения.</sys:String>
+    <sys:String x:Key="L.Desc.set_verify_checksums">Вычисляет и проверяет хэши SHA-256 для всех установщиков с прямой загрузкой для обнаружения подделки перед выполнением.</sys:String>
+    <sys:String x:Key="L.Desc.set_clm_mode">Запускает все скрипты твиков в режиме PowerShell Constrained Language Mode. Повышает безопасность, но может нарушить работу скриптов, использующих типы .NET или объекты COM.</sys:String>
+    <sys:String x:Key="L.Desc.set_portable_mode">Хранит все данные в оперативной памяти — файлы базы данных не записываются на диск. Идеально для использования на USB. Требуется перезагрузка; все данные сессии теряются при выходе.</sys:String>
+
+    <!-- Common -->
+    <sys:String x:Key="L.Global.OK">OK</sys:String>
+    <sys:String x:Key="L.Global.Cancel">Отмена</sys:String>
+    <sys:String x:Key="L.Global.Continue">Продолжить</sys:String>
+    <sys:String x:Key="L.Back">Назад</sys:String>
+
+    <!-- Home Page -->
+    <sys:String x:Key="L.Home.Title">WinZ</sys:String>
+    <sys:String x:Key="L.Home.SubTitle">Персонализируйте вашу установку Windows</sys:String>
+    <sys:String x:Key="L.Home.AdvancedBtn">Расширенная настройка</sys:String>
+    <sys:String x:Key="L.Home.AdvancedDesc">Выберите программное обеспечение, твики и параметры очистки.</sys:String>
+    <sys:String x:Key="L.Home.AdminNote">Для изменения системы требуются права администратора.</sys:String>
+
+    <!-- About Page -->
+    <sys:String x:Key="L.About.Sources">Официальные источники ПО</sys:String>
+    <sys:String x:Key="L.About.SourcesDesc">Все стандартные программы загружаются напрямую из официальных проверенных источников. WinZ использует репозитории Winget (Microsoft) и Scoop, чтобы вы всегда получали подлинные, неизмененные бинарные файлы.</sys:String>
+    <sys:String x:Key="L.About.Trans">Прозрачность и локальная обработка</sys:String>
+    <sys:String x:Key="L.About.TransDesc">WinZ работает полностью на вашем локальном компьютере. Никакой телеметрии, никакого облачного отслеживания и никакой передачи внешних данных. Все записи базы данных и скрипты твиков выполняются без внешних зависимостей.</sys:String>
+    <sys:String x:Key="L.About.CreatedBy">СОЗДАНО </sys:String>
+
+    <!-- Advanced Page -->
+    <sys:String x:Key="L.Adv.Title">Расширенная настройка</sys:String>
+    <sys:String x:Key="L.Adv.Search">Поиск записей (напр. Steam, VLC, Отключить)...</sys:String>
+    <sys:String x:Key="L.Adv.ItemsSelected">элемента(ов) выбрано</sys:String>
+    <sys:String x:Key="L.Adv.RunBtn">Применить выбранное</sys:String>
+    <sys:String x:Key="L.Adv.Export">Экспорт профиля</sys:String>
+    <sys:String x:Key="L.Adv.Import">Импорт профиля</sys:String>
+    <sys:String x:Key="L.Adv.SoftwareHeader">Выберите программы для установки</sys:String>
+    <sys:String x:Key="L.Adv.WindowsHeader">Выберите системные твики для применения</sys:String>
+    <sys:String x:Key="L.Adv.AutomationHeader">Настройка автоматических системных задач</sys:String>
+
+    <!-- Running Page -->
+    <sys:String x:Key="L.Run.Stop">Остановить установку</sys:String>
+    <sys:String x:Key="L.Run.Log">Подробный лог</sys:String>
+    <sys:String x:Key="L.Run.Cancelling">Отмена...</sys:String>
+    <sys:String x:Key="L.Run.Starting">Запуск...</sys:String>
+    <sys:String x:Key="L.Run.Done">Настройка завершена</sys:String>
+    <sys:String x:Key="L.Run.Cancelled">Установка отменена</sys:String>
+    <sys:String x:Key="L.Run.CancelSub">Сессия откачена. Некоторые изменения могут сохраниться.</sys:String>
+    <sys:String x:Key="L.Run.Methods.Winget">Установка через Winget</sys:String>
+    <sys:String x:Key="L.Run.Methods.Scoop">Установка через Scoop</sys:String>
+    <sys:String x:Key="L.Run.Methods.Direct">Загрузка и установка</sys:String>
+    <sys:String x:Key="L.Run.Methods.Tweak">Применение системного твика</sys:String>
+    <sys:String x:Key="L.Run.Methods.Remove">Удаление через PowerShell</sys:String>
+
+    <!-- Settings Page -->
+    <sys:String x:Key="L.Set.Title">Настройки</sys:String>
+    <sys:String x:Key="L.Set.Language">Язык приложения</sys:String>
+    <sys:String x:Key="L.Set.LanguageDesc">Изменить язык интерфейса (применяется мгновенно).</sys:String>
+    
+    <!-- Summary Page -->
+    <sys:String x:Key="L.Sum.SuccessHeader">Установка завершена ✓</sys:String>
+    <sys:String x:Key="L.Sum.ErrorHeader">Установка завершена с ошибками</sys:String>
+    <sys:String x:Key="L.Sum.SuccessSub">Все задачи выполнены успешно. Ваша система готова.</sys:String>
+    <sys:String x:Key="L.Sum.ErrorSub">задач(и) завершились с ошибкой. Проверьте детали ниже.</sys:String>
+    <sys:String x:Key="L.Sum.Succeeded">Успешно: </sys:String>
+    <sys:String x:Key="L.Sum.Failed">Ошибка: </sys:String>
+    <sys:String x:Key="L.Sum.Skipped">Пропущено: </sys:String>
+    <sys:String x:Key="L.Sum.ViewLogs">Посмотреть логи</sys:String>
+    <sys:String x:Key="L.Sum.Finish">Завершить</sys:String>
+
+    <!-- Dialogs -->
+    <sys:String x:Key="L.Diag.Ready.Title">Готовность к применению</sys:String>
+    <sys:String x:Key="L.Diag.Ready.Msg">Выбранное ПО и твики будут применены к вашей системе.&#x0a;&#x0a;Убедитесь, что вы сохранили работу, так как некоторые операции могут перезапустить системные компоненты.</sys:String>
+    <sys:String x:Key="L.Diag.Ready.Confirm">Начать установку</sys:String>
+    
+    <sys:String x:Key="L.Diag.Safety.Title">Защита системы</sys:String>
+    <sys:String x:Key="L.Diag.Safety.Msg">Рекомендуется создать точку восстановления системы. Это обеспечит страховку в случае непредвиденного поведения.&#x0a;&#x0a;Хотите создать точку восстановления сейчас? (Занимает ~30 сек.)</sys:String>
+    <sys:String x:Key="L.Diag.Safety.Confirm">Создать точку</sys:String>
+    <sys:String x:Key="L.Diag.Safety.Skip">Пропустить</sys:String>
+
+    <sys:String x:Key="L.Diag.Modded.Title">Предупреждение о мод-софте</sys:String>
+    <sys:String x:Key="L.Diag.Modded.Msg">Вы выбираете модифицированную версию. Она не является официальной и может содержать патчи сообщества.&#x0a;&#x0a;WinZ не несет ответственности за проблемы. Продолжить?</sys:String>
+
+    <sys:String x:Key="L.Diag.Cancel.Title">Отмена установки</sys:String>
+    <sys:String x:Key="L.Diag.Cancel.Msg">Вы уверены, что хотите отменить? Текущие операции будут остановлены.</sys:String>
+
+    <sys:String x:Key="L.Diag.ModdedExp.Title">Экспериментальные функции</sys:String>
+    <sys:String x:Key="L.Diag.ModdedExp.Msg">Включение мод-софта позволяет устанавливать версии приложений, пропатченные сообществом. Эти версии могут предлагать премиум-функции или модификации сообщества.&#x0a;&#x0a;Модифицированные программы будут выделены в списке легким синим фоном.&#x0a;&#x0a;Внимание: безопасность и стабильность не гарантируются. Продолжайте на свой страх и риск.</sys:String>
+    <sys:String x:Key="L.Diag.ModdedExp.Confirm">Включить</sys:String>
+    <sys:String x:Key="L.Diag.ModdedExp.Cancel">Назад</sys:String>
+
+    <!-- Review Dialog -->
+    <sys:String x:Key="L.Rev.Title">Проверка выбора</sys:String>
+    <sys:String x:Key="L.Rev.Msg">Вы собираетесь применить {0} изменений:</sys:String>
+    <sys:String x:Key="L.Rev.Confirm">Подтвердить и продолжить</sys:String>
+
+    <!-- Reinstall Dialog -->
+    <sys:String x:Key="L.Rei.Title">Обнаружена переустановка</sys:String>
+    <sys:String x:Key="L.Rei.Msg">Некоторые элементы уже есть в системе. Снимите выделение с тех, которые не нужно переустанавливать. Выбранные элементы будут удалены перед чистой установкой.</sys:String>
+
+    <!-- Summary Status Labels -->
+    <sys:String x:Key="L.Sum.DoneItem">Готово</sys:String>
+    <sys:String x:Key="L.Sum.FailedItem">Ошибка</sys:String>
+    <sys:String x:Key="L.Sum.SkippedItem">Пропущено</sys:String>
+
+    <!-- CLM Warning Dialog -->
+    <sys:String x:Key="L.Diag.Clm.Title">Предупреждение об ограничении среды</sys:String>
+    <sys:String x:Key="L.Diag.Clm.Msg">Включение изолированного выполнения PowerShell блокирует все скрипты в режиме ограниченного языка (CLM).&#x0a;&#x0a;Это предотвращает использование .NET рефлексии, COM-объектов и других продвинутых функций. В результате:&#x0a;&#x0a;  • Некоторые сложные твики (напр. установка IDM) не будут работать.&#x0a;  • Скрипты, полагающиеся на внешние .NET API, будут заблокированы.&#x0a;&#x0a;Включайте это только если понимаете последствия. Продолжить?</sys:String>
+    <sys:String x:Key="L.Diag.Clm.Confirm">Включить CLM</sys:String>
+    <sys:String x:Key="L.Diag.Clm.Cancel">Назад</sys:String>
+
+    <!-- Portable Mode Dialogs -->
+    <sys:String x:Key="L.Diag.Portable.Enable.Title">Включить портативный режим</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Enable.Msg">**Портативный режим** хранит все данные WinZ исключительно в [памяти] — файлы базы данных не будут записываться на диск.&#x0a;&#x0a;Это означает:&#x0a;&#x0a;  • Ваши выборы и настройки [НЕ сохранятся] между сессиями.&#x0a;  • История установки будет [потеряна] при закрытии приложения.&#x0a;  • Для вступления изменений в силу [требуется перезапуск].&#x0a;&#x0a;Для активации режима при следующем запуске рядом с исполняемым файлом будет создан файл-маркер (**winz.portable**).&#x0a;&#x0a;Продолжить?</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Disable.Title">Выключить портативный режим</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Disable.Msg">Отключение портативного режима восстановит постоянное локальное хранилище. При следующем запуске в папке AppData будет создан файл базы данных.&#x0a;&#x0a;Для вступления изменений в силу требуется перезапуск. Продолжить?</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Confirm">Перезагрузить</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Cancel">Назад</sys:String>
+
+    <!-- Error Messages -->
+    <sys:String x:Key="L.Err.Cancelled">Отменено пользователем</sys:String>
+</ResourceDictionary>

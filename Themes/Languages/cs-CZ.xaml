@@ -1,0 +1,232 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+                    xml:space="preserve">
+
+    <!-- Tabs -->
+    <sys:String x:Key="L.Tab.Special">Speciální</sys:String>
+    <sys:String x:Key="L.Tab.Safety">Zabezpečení</sys:String>
+    <sys:String x:Key="L.Tab.General">Obecné</sys:String>
+    <sys:String x:Key="L.Tab.Software">Aplikace</sys:String>
+    <sys:String x:Key="L.Tab.Windows">Systém Windows</sys:String>
+    <sys:String x:Key="L.Tab.Automation">Automatizace</sys:String>
+
+    <!-- Categories / Groups -->
+    <sys:String x:Key="L.Cat.Safety &amp; Content">Zabezpečení a obsah</sys:String>
+    <sys:String x:Key="L.Cat.System Protection">Ochrana systému</sys:String>
+    <sys:String x:Key="L.Cat.Execution Security">Zabezpečení spouštění</sys:String>
+    <sys:String x:Key="L.Cat.Portability">Přenosnost</sys:String>
+    <sys:String x:Key="L.Cat.Automation">Automatizace</sys:String>
+    <sys:String x:Key="L.Cat.Task Automation">Automatizace úloh</sys:String>
+    <sys:String x:Key="L.Cat.Web Browsers">Webové prohlížeče</sys:String>
+    <sys:String x:Key="L.Cat.Download Managers">Správci stahování</sys:String>
+    <sys:String x:Key="L.Cat.Security">Zabezpečení</sys:String>
+    <sys:String x:Key="L.Cat.Communication">Komunikace</sys:String>
+    <sys:String x:Key="L.Cat.Productivity">Produktivity</sys:String>
+    <sys:String x:Key="L.Cat.Music">Hudba</sys:String>
+    <sys:String x:Key="L.Cat.Media">Média</sys:String>
+    <sys:String x:Key="L.Cat.Creativity">Kreativita</sys:String>
+    <sys:String x:Key="L.Cat.Gaming">Hraní</sys:String>
+    <sys:String x:Key="L.Cat.Development">Vývoj</sys:String>
+    <sys:String x:Key="L.Cat.Utilities">Nástroje</sys:String>
+    <sys:String x:Key="L.Cat.File Managers">Správci souborů</sys:String>
+    <sys:String x:Key="L.Cat.System Tweaks">Systémové úpravy</sys:String>
+    <sys:String x:Key="L.Cat.Privacy">Soukromí</sys:String>
+    <sys:String x:Key="L.Cat.Debloat">Odstranění zbytečností</sys:String>
+
+    <!-- Menu Bar -->
+    <sys:String x:Key="L.Menu.File">Soubor</sys:String>
+    <sys:String x:Key="L.Menu.Settings">Nastavení</sys:String>
+    <sys:String x:Key="L.Menu.Help">Nápověda</sys:String>
+    <sys:String x:Key="L.Menu.Export">Exportovat profil...</sys:String>
+    <sys:String x:Key="L.Menu.Import">Importovat profil...</sys:String>
+    <sys:String x:Key="L.Menu.Exit">Ukončit</sys:String>
+    <sys:String x:Key="L.Menu.Preferences">Předvolby...</sys:String>
+    <sys:String x:Key="L.Menu.Portable">Přenosný režim</sys:String>
+    <sys:String x:Key="L.Menu.About">O aplikaci WinZ</sys:String>
+
+    <!-- Task Names -->
+    <sys:String x:Key="L.Name.sw_librewolf">LibreWolf</sys:String>
+    <sys:String x:Key="L.Name.sw_brave">Brave</sys:String>
+    <sys:String x:Key="L.Name.sw_idm">Internet Download Manager</sys:String>
+    <sys:String x:Key="L.Name.sw_qbittorrent">qBittorrent</sys:String>
+    <sys:String x:Key="L.Name.sw_protonvpn">Proton VPN</sys:String>
+    <sys:String x:Key="L.Name.sw_simplewall">SimpleWall</sys:String>
+    <sys:String x:Key="L.Name.sw_malwarebytes">Malwarebytes</sys:String>
+    <sys:String x:Key="L.Name.sw_keepassxc">KeePassXC</sys:String>
+    <sys:String x:Key="L.Name.sw_discord">Discord</sys:String>
+    <sys:String x:Key="L.Name.sw_obsidian">Obsidian</sys:String>
+    <sys:String x:Key="L.Name.sw_pear_desktop">Pear Desktop</sys:String>
+    <sys:String x:Key="L.Name.sw_vlc">VLC Media Player</sys:String>
+    <sys:String x:Key="L.Name.sw_blender">Blender</sys:String>
+    <sys:String x:Key="L.Name.sw_obs_studio">OBS Studio</sys:String>
+    <sys:String x:Key="L.Name.sw_steam">Steam</sys:String>
+    <sys:String x:Key="L.Name.sw_epic">Epic Games Launcher</sys:String>
+    <sys:String x:Key="L.Name.sw_vscode">Visual Studio Code</sys:String>
+    <sys:String x:Key="L.Name.sw_notepadplus">Notepad++</sys:String>
+    <sys:String x:Key="L.Name.sw_sharex">ShareX</sys:String>
+    <sys:String x:Key="L.Name.sw_7zip">7-Zip</sys:String>
+    <sys:String x:Key="L.Name.sw_winrar">WinRAR</sys:String>
+    <sys:String x:Key="L.Name.sw_onecommander">OneCommander</sys:String>
+    <sys:String x:Key="L.Name.sw_directory_opus">Directory Opus</sys:String>
+    <sys:String x:Key="L.Name.tweak_verbose_login">Podrobné zprávy při přihlášení</sys:String>
+    <sys:String x:Key="L.Name.tweak_disable_cortana">Zakázat Cortanu</sys:String>
+    <sys:String x:Key="L.Name.rem_xbox_overlay">Xbox herní panel</sys:String>
+    <sys:String x:Key="L.Name.set_allow_modded">Povolit upravený software</sys:String>
+    <sys:String x:Key="L.Name.set_prompt_restore">Vždy vyzvat k vytvoření bodu obnovení</sys:String>
+    <sys:String x:Key="L.Name.set_auto_cleanup">Automatické čištění po dokončení</sys:String>
+    <sys:String x:Key="L.Name.set_auto_update">Aktualizace repozitářů na pozadí</sys:String>
+    <sys:String x:Key="L.Name.set_verify_checksums">Ověřovat kontrolní součty stahování</sys:String>
+    <sys:String x:Key="L.Name.set_clm_mode">Izolované spouštění PowerShellu</sys:String>
+    <sys:String x:Key="L.Name.set_portable_mode">Přenosný režim (pouze v paměti)</sys:String>
+
+    <!-- Task Descriptions -->
+    <sys:String x:Key="L.Desc.sw_librewolf">Prohlížeč Firefox zaměřený na soukromí s vylepšeným výchozím zabezpečením.</sys:String>
+    <sys:String x:Key="L.Desc.sw_brave">Rychlý prohlížeč s vestavěným blokováním reklam a ochranou soukromí.</sys:String>
+    <sys:String x:Key="L.Desc.sw_idm">Vysokorychlostní akcelerátor stahování pro všechny vaše soubory.</sys:String>
+    <sys:String x:Key="L.Desc.sw_qbittorrent">Open-source alternativa k µTorrentu s pokročilými funkcemi.</sys:String>
+    <sys:String x:Key="L.Desc.sw_protonvpn">Bezpečná VPN bez protokolování od tvůrců ProtonMailu.</sys:String>
+    <sys:String x:Key="L.Desc.sw_simplewall">Snadná konfigurace platformy Windows Filtering Platform (WFP).</sys:String>
+    <sys:String x:Key="L.Desc.sw_malwarebytes">Pokročilá kybernetická bezpečnost pro domácnosti i firmy.</sys:String>
+    <sys:String x:Key="L.Desc.sw_keepassxc">Multiplatformní, komunitou vyvíjený správce hesel.</sys:String>
+    <sys:String x:Key="L.Desc.sw_discord">Hlasová, video a textová komunikace pro komunity.</sys:String>
+    <sys:String x:Key="L.Desc.sw_obsidian">Výkonná lokální znalostní báze založená na Markdownu.</sys:String>
+    <sys:String x:Key="L.Desc.sw_pear_desktop">Desktopový klient YouTube Music s mnoha funkcemi.</sys:String>
+    <sys:String x:Key="L.Desc.sw_vlc">Bezplatný multiplatformní multimediální přehrávač pro všechno.</sys:String>
+    <sys:String x:Key="L.Desc.sw_blender">Kompletní sada pro 3D tvorbu (zdarma a open source).</sys:String>
+    <sys:String x:Key="L.Desc.sw_obs_studio">Profesionální software pro nahrávání a streamování.</sys:String>
+    <sys:String x:Key="L.Desc.sw_steam">Špičková platforma pro hraní a diskuse o hrách.</sys:String>
+    <sys:String x:Key="L.Desc.sw_epic">Obchod Epic Games a oficiální spouštěč her.</sys:String>
+    <sys:String x:Key="L.Desc.sw_vscode">Výkonná úprava kódu, nově definovaná pro každého.</sys:String>
+    <sys:String x:Key="L.Desc.sw_notepadplus">Lehký editor zdrojového kódu a náhrada za Poznámkový blok.</sys:String>
+    <sys:String x:Key="L.Desc.sw_sharex">Pokročilý nástroj pro snímání obrazovky a sdílení souborů.</sys:String>
+    <sys:String x:Key="L.Desc.sw_7zip">Archivátor s vysokým kompresním poměrem a open source kořeny.</sys:String>
+    <sys:String x:Key="L.Desc.sw_winrar">Výkonný správce archivů ZIP, RAR a dalších.</sys:String>
+    <sys:String x:Key="L.Desc.sw_onecommander">Moderní dvoupanelový správce souborů s pokročilými funkcemi.</sys:String>
+    <sys:String x:Key="L.Desc.sw_directory_opus">Profesionální náhrada Průzkumníka Windows.</sys:String>
+    <sys:String x:Key="L.Desc.tweak_verbose_login">Zobrazovat podrobné stavové zprávy během přihlašování/vypínání.</sys:String>
+    <sys:String x:Key="L.Desc.tweak_disable_cortana">Zakáže integraci vyhledávání Cortana v celém systému.</sys:String>
+    <sys:String x:Key="L.Desc.rem_xbox_overlay">Odstraní aplikaci Xbox herní panel.</sys:String>
+    <sys:String x:Key="L.Desc.set_allow_modded">Povolí alternativní, komunitou upravené verze určitého softwaru.</sys:String>
+    <sys:String x:Key="L.Desc.set_prompt_restore">Dotázat se na vytvoření bodu obnovení před spuštěním jakékoli úlohy.</sys:String>
+    <sys:String x:Key="L.Desc.set_auto_cleanup">Vymaže dočasnou složku Windows a mezipaměti správců balíčků po úspěšném spuštění.</sys:String>
+    <sys:String x:Key="L.Desc.set_auto_update">Automaticky aktualizuje repozitáře Winget a Scoop při spuštění aplikace.</sys:String>
+    <sys:String x:Key="L.Desc.set_verify_checksums">Vypočítá a ověří hashe SHA-256 u všech instalátorů z přímého stahování, aby detekoval manipulaci před spuštěním.</sys:String>
+    <sys:String x:Key="L.Desc.set_clm_mode">Spustí všechny skripty úprav v režimu PowerShell Constrained Language Mode. Zvyšuje zabezpečení, ale může narušit skripty používající typy .NET nebo objekty COM.</sys:String>
+    <sys:String x:Key="L.Desc.set_portable_mode">Uchovává všechna data v paměti RAM – na disk se nezapisují žádné databázové soubory. Ideální pro použití na USB. Vyžaduje restart; všechna data relace budou při ukončení ztracena.</sys:String>
+
+    <!-- Common -->
+    <sys:String x:Key="L.Global.OK">OK</sys:String>
+    <sys:String x:Key="L.Global.Cancel">Zrušit</sys:String>
+    <sys:String x:Key="L.Global.Continue">Pokračovat</sys:String>
+    <sys:String x:Key="L.Back">Zpět</sys:String>
+
+    <!-- Home Page -->
+    <sys:String x:Key="L.Home.Title">WinZ</sys:String>
+    <sys:String x:Key="L.Home.SubTitle">Přizpůsobte si instalaci Windows</sys:String>
+    <sys:String x:Key="L.Home.AdvancedBtn">Rozšířené nastavení</sys:String>
+    <sys:String x:Key="L.Home.AdvancedDesc">Vyberte si software, úpravy a možnosti odstranění zbytečností.</sys:String>
+    <sys:String x:Key="L.Home.AdminNote">Pro změnu systému jsou vyžadována oprávnění správce.</sys:String>
+
+    <!-- About Page -->
+    <sys:String x:Key="L.About.Title">O aplikaci WinZ</sys:String>
+    <sys:String x:Key="L.About.Sources">Oficiální zdroje softwaru</sys:String>
+    <sys:String x:Key="L.About.SourcesDesc">Všechny standardní programy jsou stahovány přímo z oficiálních ověřených zdrojů. WinZ využívá repozitáře Winget (Microsoft) a Scoop, abyste vždy získali originální, nezměněné binární soubory.</sys:String>
+    <sys:String x:Key="L.About.Trans">Transparentnost a lokální zpracování</sys:String>
+    <sys:String x:Key="L.About.TransDesc">WinZ běží kompletně na vašem lokálním počítači. Žádná telemetrie, žádné cloudové sledování a žádný přenos externích dat. Všechny záznamy v databázi a skripty úprav se provádějí bez externích závislostí.</sys:String>
+    <sys:String x:Key="L.About.CreatedBy">VYTVOŘIL </sys:String>
+
+    <!-- Advanced Page -->
+    <sys:String x:Key="L.Adv.Title">Rozšířené nastavení</sys:String>
+    <sys:String x:Key="L.Adv.Search">Hledat položky (např. Steam, VLC, Vypnout)...</sys:String>
+    <sys:String x:Key="L.Adv.ItemsSelected">položek vybráno</sys:String>
+    <sys:String x:Key="L.Adv.RunBtn">Použít výběr</sys:String>
+    <sys:String x:Key="L.Adv.Export">Exportovat profil</sys:String>
+    <sys:String x:Key="L.Adv.Import">Importovat profil</sys:String>
+    <sys:String x:Key="L.Adv.SoftwareHeader">Vyberte software k instalaci</sys:String>
+    <sys:String x:Key="L.Adv.WindowsHeader">Vyberte systémové úpravy k použití</sys:String>
+    <sys:String x:Key="L.Adv.AutomationHeader">Konfigurovat automatizované systémové úlohy</sys:String>
+
+    <!-- Running Page -->
+    <sys:String x:Key="L.Run.Stop">Zastavit nastavení</sys:String>
+    <sys:String x:Key="L.Run.Log">Podrobný log</sys:String>
+    <sys:String x:Key="L.Run.Cancelling">Rušení...</sys:String>
+    <sys:String x:Key="L.Run.Starting">Spouštění...</sys:String>
+    <sys:String x:Key="L.Run.Done">Nastavení dokončeno</sys:String>
+    <sys:String x:Key="L.Run.Cancelled">Nastavení zrušeno</sys:String>
+    <sys:String x:Key="L.Run.CancelSub">Relace byla vrácena zpět. Některé změny mohou přetrvat.</sys:String>
+    <sys:String x:Key="L.Run.Methods.Winget">Instalace přes Winget</sys:String>
+    <sys:String x:Key="L.Run.Methods.Scoop">Instalace přes Scoop</sys:String>
+    <sys:String x:Key="L.Run.Methods.Direct">Stahování a instalace</sys:String>
+    <sys:String x:Key="L.Run.Methods.Tweak">Aplikování systémové úpravy</sys:String>
+    <sys:String x:Key="L.Run.Methods.Remove">Odstraňování přes PowerShell</sys:String>
+
+    <!-- Settings Page -->
+    <sys:String x:Key="L.Set.Title">Nastavení</sys:String>
+    <sys:String x:Key="L.Set.Language">Jazyk aplikace</sys:String>
+    <sys:String x:Key="L.Set.LanguageDesc">Změnit jazyk uživatelského rozhraní (aplikuje se okamžitě).</sys:String>
+    
+    <!-- Summary Page -->
+    <sys:String x:Key="L.Sum.SuccessHeader">Nastavení dokončeno ✓</sys:String>
+    <sys:String x:Key="L.Sum.ErrorHeader">Nastavení dokončeno s chybami</sys:String>
+    <sys:String x:Key="L.Sum.SuccessSub">Vše proběhlo úspěšně. Váš systém je připraven.</sys:String>
+    <sys:String x:Key="L.Sum.ErrorSub">úloh selhalo. Zkontrolujte podrobnosti níže.</sys:String>
+    <sys:String x:Key="L.Sum.Succeeded">Úspěšně: </sys:String>
+    <sys:String x:Key="L.Sum.Failed">Selhalo: </sys:String>
+    <sys:String x:Key="L.Sum.Skipped">Přeskočeno: </sys:String>
+    <sys:String x:Key="L.Sum.ViewLogs">Zobrazit logy</sys:String>
+    <sys:String x:Key="L.Sum.Finish">Dokončit</sys:String>
+
+    <!-- Dialogs -->
+    <sys:String x:Key="L.Diag.Ready.Title">Připraveno k aplikaci změn</sys:String>
+    <sys:String x:Key="L.Diag.Ready.Msg">Vybraný software a úpravy budou nyní aplikovány na váš systém.&#x0a;&#x0a;Ujistěte se, že máte uloženou práci, protože některé operace mohou restartovat systémové komponenty.</sys:String>
+    <sys:String x:Key="L.Diag.Ready.Confirm">Spustit nastavení</sys:String>
+    
+    <sys:String x:Key="L.Diag.Safety.Title">Ochrana systému</sys:String>
+    <sys:String x:Key="L.Diag.Safety.Msg">Před aplikací těchto změn se důrazně doporučuje vytvořit bod obnovení systému. To vám zajistí záchrannou síť, pokud by se cokoli chovalo neočekávaně.&#x0a;&#x0a;Chcete nyní vytvořit bod obnovení? (Trvá to ~30 sekund)</sys:String>
+    <sys:String x:Key="L.Diag.Safety.Confirm">Vytvořit bod</sys:String>
+    <sys:String x:Key="L.Diag.Safety.Skip">Přeskočit</sys:String>
+
+    <sys:String x:Key="L.Diag.Modded.Title">Varování: Upravený software</sys:String>
+    <sys:String x:Key="L.Diag.Modded.Msg">Vybíráte upravenou verzi tohoto softwaru. Upravený software není oficiální a může obsahovat komunitní patče nebo modifikace.&#x0a;&#x0a;WinZ neodpovídá za případné problémy vzniklé použitím upraveného softwaru. Chcete pokračovat?</sys:String>
+
+    <sys:String x:Key="L.Diag.Cancel.Title">Zrušit nastavení</sys:String>
+    <sys:String x:Key="L.Diag.Cancel.Msg">Opravdu chcete zrušit nastavení? Tím se zastaví probílející operace a dojde k pokusu o vrácení změn.</sys:String>
+
+    <sys:String x:Key="L.Diag.ModdedExp.Title">Experimentální funkce</sys:String>
+    <sys:String x:Key="L.Diag.ModdedExp.Msg">Povolení [upraveného softwaru] vám umožní instalovat komunitou upravené verze aplikací. Tyto verze mohou nabízet prémiové funkce nebo komunitní modifikace.&#x0a;&#x0a;Upravené položky budou v seznamu zvýrazněny [jemným modrým pozadím].&#x0a;&#x0a;**Varování:** Bezpečnost a stabilita nejsou zaručeny. Pokračujte na vlastní riziko.</sys:String>
+    <sys:String x:Key="L.Diag.ModdedExp.Confirm">Povolit</sys:String>
+    <sys:String x:Key="L.Diag.ModdedExp.Cancel">Zpět</sys:String>
+
+    <!-- Review Dialog -->
+    <sys:String x:Key="L.Rev.Title">Kontrola výběru</sys:String>
+    <sys:String x:Key="L.Rev.Msg">Chystáte se aplikovat {0} změn:</sys:String>
+    <sys:String x:Key="L.Rev.Confirm">Potvrdit a pokračovat</sys:String>
+
+    <!-- Reinstall Dialog -->
+    <sys:String x:Key="L.Rei.Title">Detekována přeinstalace</sys:String>
+    <sys:String x:Key="L.Rei.Msg">Některé položky již ve vašem systému jsou. Odškrtněte ty, které si přejete přeskočit. Vybrané položky budou před čistou instalací odinstalovány.</sys:String>
+
+    <!-- Summary Status Labels -->
+    <sys:String x:Key="L.Sum.DoneItem">Hotovo</sys:String>
+    <sys:String x:Key="L.Sum.FailedItem">Selhalo</sys:String>
+    <sys:String x:Key="L.Sum.SkippedItem">Přeskočeno</sys:String>
+
+    <!-- CLM Warning Dialog -->
+    <sys:String x:Key="L.Diag.Clm.Title">Varování o izolovaném spuštění</sys:String>
+    <sys:String x:Key="L.Diag.Clm.Msg">Zapnutí [izolovaného spouštění PowerShellu] uzamkne všechny skripty do režimu omezeného jazyka (CLM).&#x0a;&#x0a;To brání skriptům v používání .NET reflexe, COM objektů a dalších pokročilých funkcí. V důsledku toho:&#x0a;&#x0a;  • Některé složité úpravy (např. [instalace modovaného IDM]) selžou.&#x0a;  • Skripty spoléhající na externí .NET API budou [zablokovány].&#x0a;&#x0a;Aktivujte pouze pokud rozumíte důsledkům. Pokračovat?</sys:String>
+    <sys:String x:Key="L.Diag.Clm.Confirm">Aktivovat CLM</sys:String>
+    <sys:String x:Key="L.Diag.Clm.Cancel">Zpět</sys:String>
+
+    <!-- Portable Mode Dialogs -->
+    <sys:String x:Key="L.Diag.Portable.Enable.Title">Aktivovat přenosný režim</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Enable.Msg">**Přenosný režim** uchovává všechna data WinZ striktně v [paměti] – na disk se nezapisují žádné databázové soubory.&#x0a;&#x0a;To znamená:&#x0a;&#x0a;  • Váš výběr úloh a nastavení [NEBUDOU] mezi relacemi uloženy.&#x0a;  • Historie instalací bude při zavření aplikace [ztracena].&#x0a;  • Pro projevení změny je [nutný restart] aplikace.&#x0a;&#x0a;Vedle spustitelného souboru bude umístěn soubor (**winz.portable**) pro aktivaci tohoto režimu při příštím spuštění.&#x0a;&#x0a;Pokračovat?</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Disable.Title">Deaktivovat přenosný režim</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Disable.Msg">Deaktivací přenosného režimu se obnoví trvalé lokální úložiště. Při příštím spuštění bude ve vaší složce AppData vytvořen databázový soubor.&#x0a;&#x0a;Pro projevení změny je nutný restart aplikace. Pokračovat?</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Confirm">Restartovat nyní</sys:String>
+    <sys:String x:Key="L.Diag.Portable.Cancel">Zpět</sys:String>
+
+    <!-- Error Messages -->
+    <sys:String x:Key="L.Err.Cancelled">Uživatel zrušil operaci</sys:String>
+
+</ResourceDictionary>

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using WinZ.Models;
+using WinZ.Services;
 
 namespace WinZ.Views;
 
@@ -16,6 +17,13 @@ public partial class ReinstallDialog : Window
         InitializeComponent();
         Items = tasksToReview.Select(t => new ReinstallItem { Name = t.Name, Task = t }).ToList();
         ReinstallList.ItemsSource = Items;
+        
+        Closed += (s, e) =>
+        {
+            ReinstallList.ItemsSource = null;
+            DataContext = null;
+            MemoryService.Optimize();
+        };
     }
 
     private void Back_Click(object sender, RoutedEventArgs e)

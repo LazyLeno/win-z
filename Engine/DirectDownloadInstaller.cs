@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using WinZ.Models;
@@ -17,21 +18,45 @@ public class DirectDownloadInstaller(LogService log)
     {
         ArgumentNullException.ThrowIfNull(task);
         
-        if (task.FallbackUrl == null)
+        if (task.EffectiveFallbackUrl == null)
         {
-            log.Error(string.Format("No fallback URL configured for {0}", task.Name));
+            log.Error(string.Format("No fallback URL configured for {0}", task.DisplayName));
             return false;
         }
 
         var tmp = Path.Combine(Path.GetTempPath(), string.Format("WinZ_{0}.exe", task.Id));
 
-        log.Cmd(string.Format("Downloading {0}", task.FallbackUrl));
+        log.Cmd(string.Format("Downloading {0}", task.EffectiveFallbackUrl));
         try
         {
-            var bytes = await Http.GetByteArrayAsync(task.FallbackUrl, ct);
+            using var response = await Http.GetAsync(task.EffectiveFallbackUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+            response.EnsureSuccessStatusCode();
+            
+            var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+            using var stream = await response.Content.ReadAsStreamAsync(ct);
+            using var fileStream = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.None, 65536, true);
+            
+            var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(65536);
+            try
+            {
+                int read;
+                long totalRead = 0;
+                while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+                {
+                    await fileStream.WriteAsync(buffer, 0, read, ct);
+                    totalRead += read;
+                    if (totalBytes != -1)
+                    {
+                        task.Progress = (int)((double)totalRead / totalBytes * 100);
+                    }
+                }
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+            }
 
-            await File.WriteAllBytesAsync(tmp, bytes, ct);
-            log.Ok(string.Format("Downloaded {0}KB → {1}", bytes.Length / 1024, tmp));
+            log.Ok(string.Format("Downloaded {0}KB → {1}", new FileInfo(tmp).Length / 1024, tmp));
         }
         catch (HttpRequestException ex)
         {
@@ -47,6 +72,45 @@ public class DirectDownloadInstaller(LogService log)
         {
             log.Error(string.Format("Download failed: {0}", ex.Message));
             return false;
+        }
+
+        // ── Checksum Verification ──────────────────────────────────────────────
+        bool verifySetting = await DataService.Instance.GetSettingAsync("VerifyChecksums") != "False";
+        if (verifySetting)
+        {
+            if (string.IsNullOrWhiteSpace(task.ExpectedSha256))
+            {
+                log.Info(string.Format("[Checksum] No hash configured for {0} — skipping verification.", task.DisplayName));
+            }
+            else
+            {
+                log.Cmd(string.Format("Verifying SHA-256 checksum for {0}", task.DisplayName));
+                string actualHash;
+                try
+                {
+                    using var sha = SHA256.Create();
+                    await using var fs = new FileStream(tmp, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, true);
+                    var hashBytes = await Task.Run(() => sha.ComputeHash(fs), ct);
+                    actualHash = Convert.ToHexString(hashBytes);
+                }
+                catch (Exception ex)
+                {
+                    log.Error(string.Format("Checksum computation failed: {0}", ex.Message));
+                    try { File.Delete(tmp); } catch (IOException) { }
+                    return false;
+                }
+
+                if (!actualHash.Equals(task.ExpectedSha256.Replace("-", "").Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    log.Error(string.Format(
+                        "⚠ CHECKSUM MISMATCH for {0}! Expected: {1} | Got: {2} — Aborting install.",
+                        task.DisplayName, task.ExpectedSha256.ToUpper(), actualHash));
+                    try { File.Delete(tmp); } catch (IOException) { }
+                    return false;
+                }
+
+                log.Ok(string.Format("Checksum verified ✓ ({0})", actualHash[..16] + "..."));
+            }
         }
 
         log.Cmd(string.Format("Running silent install: {0} /S", tmp));
@@ -69,11 +133,11 @@ public class DirectDownloadInstaller(LogService log)
 
         if (p.ExitCode == 0) 
         { 
-            log.Ok(string.Format("{0} installed.", task.Name)); 
+            log.Ok(string.Format("{0} installed.", task.DisplayName)); 
             return true; 
         }
         
-        log.Error(string.Format("{0} installer exit {1}", task.Name, p.ExitCode));
+        log.Error(string.Format("{0} installer exit {1}", task.DisplayName, p.ExitCode));
         return false;
     }
 }

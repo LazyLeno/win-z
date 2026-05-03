@@ -6,7 +6,13 @@
         MinHeight="480" MinWidth="640"
         WindowStyle="SingleBorderWindow"
         Background="#1E1E1E"
+        Icon="pack://application:,,,/Assets/app_icon.ico"
         FontFamily="Segoe UI" FontSize="13">
 
-    <Frame x:Name="MainFrame" Source="Views/HomePage.xaml" NavigationUIVisibility="Hidden"/>
+    <Grid>
+        <Frame x:Name="MainFrame" 
+               NavigationUIVisibility="Hidden" 
+               JournalOwnership="UsesParentJournal"
+               Navigated="MainFrame_Navigated"/>
+    </Grid>
 </Window>
